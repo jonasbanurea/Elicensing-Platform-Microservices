@@ -1,0 +1,303 @@
+{
+  "info": {
+    "_postman_id": "archive-service-001",
+    "name": "Archive Service - Jelita",
+    "description": "API Collection untuk Digital Archive Service\\n\\nService ini mengelola pengarsipan dokumen izin yang telah diterbitkan:\\n- Receive trigger dari Workflow/Survey Service\\n- Archive final license document\\n- Set hak akses OPD\\n- Retrieve archived data",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{accessToken}}",
+        "type": "string"
+      }
+    ]
+  },
+  "item": [
+    {
+      "name": "0. Setup - Login",
+      "item": [
+        {
+          "name": "Login as Admin",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "if (pm.response.code === 200) {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.environment.set(\"accessToken\", jsonData.token);",
+                  "    console.log(\"Token saved: \" + jsonData.token.substring(0, 20) + \"...\");",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"{{admin_username}}\",\n  \"password\": \"{{admin_password}}\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": { "raw": "{{auth_base_url}}/api/auth/login", "host": ["{{auth_base_url}}"], "path": ["api", "auth", "login"] }
+          }
+        },
+        {
+          "name": "Login as OPD",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "if (pm.response.code === 200) {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.environment.set(\"accessToken\", jsonData.token);",
+                  "    console.log(\"OPD Token saved\");",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"opd_demo\",\n  \"password\": \"demo123\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": { "raw": "{{auth_base_url}}/api/auth/login", "host": ["{{auth_base_url}}"], "path": ["api", "auth", "login"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "1. Receive Archive Trigger (Internal)",
+      "item": [
+        {
+          "name": "POST Receive Trigger from Survey Service",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 201 or 200\", function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has message and data\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('message');",
+                  "    pm.expect(jsonData).to.have.property('data');",
+                  "});",
+                  "",
+                  "pm.test(\"Archive record created\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.data).to.have.property('arsip_id');",
+                  "    pm.expect(jsonData.data).to.have.property('permohonan_id');",
+                  "});",
+                  "",
+                  "// Save arsip_id",
+                  "if (pm.response.code === 200 || pm.response.code === 201) {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.environment.set(\"arsip_id\", jsonData.data.arsip_id);",
+                  "    console.log(\"Saved arsip_id: \" + jsonData.data.arsip_id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"permohonan_id\": {{permohonan_id}},\n  \"nomor_registrasi\": \"REG/2024/11/0001\",\n  \"user_id\": {{pemohon_user_id}},\n  \"triggered_from\": \"survey_service\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{archive_base_url}}/api/internal/arsipkan-dokumen",
+              "host": ["{{archive_base_url}}"],
+              "path": ["api", "internal", "arsipkan-dokumen"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Archive License",
+      "item": [
+        {
+          "name": "POST Archive Izin (Admin)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 201\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "pm.test(\"Archive has file_path\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.data).to.have.property('file_path');",
+                  "    pm.expect(jsonData.data).to.have.property('archived_at');",
+                  "});",
+                  "",
+                  "pm.test(\"Status is archived\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.data.status).to.equal('archived');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"permohonan_id\": {{permohonan_id}},\n  \"nomor_registrasi\": \"REG/2024/11/0001\",\n  \"jenis_izin\": \"Izin Mendirikan Bangunan\",\n  \"file_path\": \"/uploads/licenses/2024/11/REG-2024-11-0001.pdf\",\n  \"metadata_json\": {\n    \"file_size\": \"245KB\",\n    \"pages\": 5,\n    \"format\": \"PDF\",\n    \"uploaded_by\": \"Admin\",\n    \"checksum\": \"abc123def456\"\n  }\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{archive_base_url}}/api/arsip/archive-izin",
+              "host": ["{{archive_base_url}}"],
+              "path": ["api", "arsip", "archive-izin"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Set Hak Akses OPD",
+      "item": [
+        {
+          "name": "POST Set Access Rights (Admin)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Access rights updated\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.data).to.have.property('hak_akses_opd');",
+                  "    pm.expect(jsonData.data.hak_akses_opd).to.be.an('array');",
+                  "});",
+                  "",
+                  "pm.test(\"OPD IDs added to access list\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.data.hak_akses_opd.length).to.be.above(0);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"arsip_id\": {{arsip_id}},\n  \"opd_ids\": [2, 3]\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{archive_base_url}}/api/arsip/set-hak-akses",
+              "host": ["{{archive_base_url}}"],
+              "path": ["api", "arsip", "set-hak-akses"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Get Archive Data",
+      "item": [
+        {
+          "name": "GET Archive by ID (Admin)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Archive data returned\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.data).to.have.property('id');",
+                  "    pm.expect(jsonData.data).to.have.property('permohonan_id');",
+                  "    pm.expect(jsonData.data).to.have.property('file_path');",
+                  "});",
+                  "",
+                  "pm.test(\"Status updated to accessed\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.data.status).to.equal('accessed');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{archive_base_url}}/api/arsip/{{arsip_id}}",
+              "host": ["{{archive_base_url}}"],
+              "path": ["api", "arsip", "{{arsip_id}}"]
+            }
+          }
+        },
+        {
+          "name": "GET Archive by ID (OPD with Access)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"OPD can access archive\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.data).to.have.property('id');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{archive_base_url}}/api/arsip/{{arsip_id}}",
+              "host": ["{{archive_base_url}}"],
+              "path": ["api", "arsip", "{{arsip_id}}"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

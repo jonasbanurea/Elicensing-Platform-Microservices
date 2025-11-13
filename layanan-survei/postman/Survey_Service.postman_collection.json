@@ -1,0 +1,425 @@
+{
+  "info": {
+    "_postman_id": "survey-service-001",
+    "name": "Survey (SKM) Service - Jelita",
+    "description": "API Collection untuk Layanan Survei Kepuasan Masyarakat (SKM)\n\nService ini mengelola survei kepuasan masyarakat yang wajib diisi setelah permohonan disetujui, meliputi:\n- Notifikasi SKM kepada pemohon\n- Form pertanyaan SKM standar\n- Submit jawaban survei\n- Rekap hasil SKM\n- Buka akses download izin\n- Trigger pengarsipan dokumen",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{accessToken}}",
+        "type": "string"
+      }
+    ]
+  },
+  "item": [
+    {
+      "name": "1. Notifikasi SKM",
+      "item": [
+        {
+          "name": "Send Notifikasi SKM",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has message and data\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('message');",
+                  "    pm.expect(jsonData).to.have.property('data');",
+                  "});",
+                  "",
+                  "pm.test(\"Notifikasi contains survey link\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.data).to.have.property('survey_link');",
+                  "    pm.expect(jsonData.data).to.have.property('skm_id');",
+                  "});",
+                  "",
+                  "// Save skm_id",
+                  "if (pm.response.code === 200) {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.environment.set(\"skm_id\", jsonData.data.skm_id);",
+                  "    console.log(\"Saved skm_id: \" + jsonData.data.skm_id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"permohonan_id\": {{permohonan_id}},\n  \"user_id\": {{pemohon_user_id}},\n  \"nomor_registrasi\": \"REG/2024/01/0001\"\n}"
+            },
+            "url": {
+              "raw": "{{survey_base_url}}/api/skm/notifikasi",
+              "host": [
+                "{{survey_base_url}}"
+              ],
+              "path": [
+                "api",
+                "skm",
+                "notifikasi"
+              ]
+            },
+            "description": "**Role Required**: Admin, OPD\n\nMengirim notifikasi kepada pemohon untuk mengisi survei SKM setelah izin disetujui.\n\n**Note**: Di production, endpoint ini akan mengirim email/SMS dengan link survei."
+          },
+          "response": []
+        }
+      ],
+      "description": "Endpoint untuk mengirim notifikasi SKM kepada pemohon"
+    },
+    {
+      "name": "2. Form SKM",
+      "item": [
+        {
+          "name": "Get Form SKM",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has form questions\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.data).to.have.property('questions');",
+                  "    pm.expect(jsonData.data.questions).to.be.an('array');",
+                  "});",
+                  "",
+                  "pm.test(\"Form has 9 SKM questions\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.data.questions.length).to.equal(9);",
+                  "});",
+                  "",
+                  "pm.test(\"Each question has required fields\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    jsonData.data.questions.forEach(function(q) {",
+                  "        pm.expect(q).to.have.property('id');",
+                  "        pm.expect(q).to.have.property('pertanyaan');",
+                  "        pm.expect(q).to.have.property('unsur');",
+                  "        pm.expect(q).to.have.property('skala');",
+                  "    });",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{survey_base_url}}/api/skm/form",
+              "host": [
+                "{{survey_base_url}}"
+              ],
+              "path": [
+                "api",
+                "skm",
+                "form"
+              ]
+            },
+            "description": "**No Auth Required** (Public endpoint)\n\nMengambil form pertanyaan SKM standar berdasarkan Permenpan RB No. 14 Tahun 2017.\n\n**9 Unsur SKM**:\n1. Persyaratan\n2. Prosedur\n3. Waktu Pelayanan\n4. Biaya/Tarif\n5. Produk Spesifikasi\n6. Kompetensi Pelaksana\n7. Perilaku Pelaksana\n8. Sarana dan Prasarana\n9. Penanganan Pengaduan"
+          },
+          "response": []
+        }
+      ],
+      "description": "Endpoint untuk mendapatkan form survei SKM"
+    },
+    {
+      "name": "3. Submit SKM",
+      "item": [
+        {
+          "name": "Submit SKM Survey",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 201\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has SKM score\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.data).to.have.property('score');",
+                  "    pm.expect(jsonData.data.score).to.have.property('skm_value');",
+                  "    pm.expect(jsonData.data.score).to.have.property('category');",
+                  "});",
+                  "",
+                  "pm.test(\"SKM status is completed\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.data.status).to.equal('completed');",
+                  "});",
+                  "",
+                  "pm.test(\"SKM value is calculated\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    const skmValue = parseFloat(jsonData.data.score.skm_value);",
+                  "    pm.expect(skmValue).to.be.at.least(0);",
+                  "    pm.expect(skmValue).to.be.at.most(100);",
+                  "});",
+                  "",
+                  "// Log SKM score",
+                  "if (pm.response.code === 201) {",
+                  "    var jsonData = pm.response.json();",
+                  "    console.log(\"SKM Value: \" + jsonData.data.score.skm_value);",
+                  "    console.log(\"Category: \" + jsonData.data.score.category);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"permohonan_id\": {{permohonan_id}},\n  \"jawaban_json\": {\n    \"answers\": [\n      {\"id\": 1, \"nilai\": 4, \"unsur\": \"Persyaratan\"},\n      {\"id\": 2, \"nilai\": 4, \"unsur\": \"Prosedur\"},\n      {\"id\": 3, \"nilai\": 3, \"unsur\": \"Waktu Pelayanan\"},\n      {\"id\": 4, \"nilai\": 4, \"unsur\": \"Biaya/Tarif\"},\n      {\"id\": 5, \"nilai\": 4, \"unsur\": \"Produk Spesifikasi\"},\n      {\"id\": 6, \"nilai\": 4, \"unsur\": \"Kompetensi Pelaksana\"},\n      {\"id\": 7, \"nilai\": 4, \"unsur\": \"Perilaku Pelaksana\"},\n      {\"id\": 8, \"nilai\": 3, \"unsur\": \"Sarana dan Prasarana\"},\n      {\"id\": 9, \"nilai\": 3, \"unsur\": \"Penanganan Pengaduan\"}\n    ],\n    \"saran\": \"Pelayanan sudah sangat baik, hanya perlu peningkatan di sarana prasarana\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{survey_base_url}}/api/skm/submit",
+              "host": [
+                "{{survey_base_url}}"
+              ],
+              "path": [
+                "api",
+                "skm",
+                "submit"
+              ]
+            },
+            "description": "**Role Required**: Pemohon\n\nPemohon submit jawaban survei SKM.\n\n**Skala Nilai**: 1-4 untuk setiap pertanyaan\n- 1 = Tidak Baik\n- 2 = Kurang Baik\n- 3 = Baik\n- 4 = Sangat Baik\n\n**Kategori Nilai SKM**:\n- 88.31 - 100.00 = Sangat Baik\n- 76.61 - 88.30 = Baik\n- 65.00 - 76.60 = Kurang Baik\n- 25.00 - 64.99 = Tidak Baik"
+          },
+          "response": []
+        }
+      ],
+      "description": "Endpoint untuk submit jawaban survei SKM"
+    },
+    {
+      "name": "4. Rekap SKM",
+      "item": [
+        {
+          "name": "Get Rekap SKM",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has statistics\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.data).to.have.property('total_surveys');",
+                  "    pm.expect(jsonData.data).to.have.property('average_skm_value');",
+                  "    pm.expect(jsonData.data).to.have.property('category_distribution');",
+                  "});",
+                  "",
+                  "pm.test(\"Category distribution has all categories\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.data.category_distribution).to.have.property('Sangat Baik');",
+                  "    pm.expect(jsonData.data.category_distribution).to.have.property('Baik');",
+                  "    pm.expect(jsonData.data.category_distribution).to.have.property('Kurang Baik');",
+                  "    pm.expect(jsonData.data.category_distribution).to.have.property('Tidak Baik');",
+                  "});",
+                  "",
+                  "// Log statistics",
+                  "if (pm.response.code === 200) {",
+                  "    var jsonData = pm.response.json();",
+                  "    console.log(\"Total Surveys: \" + jsonData.data.total_surveys);",
+                  "    console.log(\"Average SKM: \" + jsonData.data.average_skm_value);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{survey_base_url}}/api/skm/rekap?status=completed",
+              "host": [
+                "{{survey_base_url}}"
+              ],
+              "path": [
+                "api",
+                "skm",
+                "rekap"
+              ],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "completed",
+                  "description": "Filter by status: pending or completed"
+                },
+                {
+                  "key": "startDate",
+                  "value": "2024-01-01",
+                  "description": "Start date for filtering (YYYY-MM-DD)",
+                  "disabled": true
+                },
+                {
+                  "key": "endDate",
+                  "value": "2024-12-31",
+                  "description": "End date for filtering (YYYY-MM-DD)",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "**Role Required**: Admin, OPD, Pimpinan\n\nMelihat rekap dan statistik hasil survei SKM.\n\n**Statistics Include**:\n- Total surveys (pending + completed)\n- Average SKM value\n- Category distribution (Sangat Baik, Baik, Kurang Baik, Tidak Baik)\n- List of all surveys with individual SKM values"
+          },
+          "response": []
+        }
+      ],
+      "description": "Endpoint untuk melihat rekap hasil SKM"
+    },
+    {
+      "name": "5. Internal - Buka Akses Download",
+      "item": [
+        {
+          "name": "Buka Akses Download",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Download access unlocked\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.data.download_unlocked).to.be.true;",
+                  "    pm.expect(jsonData.data).to.have.property('download_unlocked_at');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"permohonan_id\": {{permohonan_id}}\n}"
+            },
+            "url": {
+              "raw": "{{survey_base_url}}/api/internal/buka-akses-download",
+              "host": [
+                "{{survey_base_url}}"
+              ],
+              "path": [
+                "api",
+                "internal",
+                "buka-akses-download"
+              ]
+            },
+            "description": "**No Auth Required** (Internal Service Communication)\n\nEndpoint internal yang dipanggil setelah pemohon menyelesaikan SKM untuk membuka akses download izin.\n\n**Flow**:\n1. Pemohon submit SKM\n2. System otomatis call endpoint ini\n3. Update status download_unlocked = true\n4. Notify Application Service\n5. Pemohon dapat download izin"
+          },
+          "response": []
+        }
+      ],
+      "description": "Endpoint internal untuk membuka akses download setelah SKM selesai"
+    },
+    {
+      "name": "6. Internal - Trigger Pengarsipan",
+      "item": [
+        {
+          "name": "Trigger Pengarsipan",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Pengarsipan triggered\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('message');",
+                  "    pm.expect(jsonData.data).to.have.property('permohonan_id');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"permohonan_id\": {{permohonan_id}},\n  \"nomor_registrasi\": \"REG/2024/01/0001\",\n  \"user_id\": {{pemohon_user_id}}\n}"
+            },
+            "url": {
+              "raw": "{{survey_base_url}}/api/internal/trigger-pengarsipan",
+              "host": [
+                "{{survey_base_url}}"
+              ],
+              "path": [
+                "api",
+                "internal",
+                "trigger-pengarsipan"
+              ]
+            },
+            "description": "**No Auth Required** (Internal Service Communication)\n\nEndpoint internal untuk trigger Archive Service setelah pemohon download izin.\n\n**Flow**:\n1. Pemohon download izin dari Application Service\n2. Application Service call endpoint ini\n3. Survey Service trigger Archive Service\n4. Archive Service menyimpan dokumen ke arsip\n\n**Note**: Endpoint ini untuk komunikasi antar service."
+          },
+          "response": []
+        }
+      ],
+      "description": "Endpoint internal untuk trigger pengarsipan setelah download"
+    }
+  ],
+  "variable": [
+    {
+      "key": "survey_base_url",
+      "value": "http://localhost:3030",
+      "type": "string"
+    }
+  ]
+}

@@ -1,0 +1,565 @@
+{
+	"info": {
+		"_postman_id": "b2c3d4e5-f6a7-4890-b1c2-d3e4f5a6b7c8",
+		"name": "Application Service - Layanan Pendaftaran",
+		"description": "Postman collection untuk menguji layanan-pendaftaran (Application Service)\n\nEndpoints:\n- POST /api/permohonan - Create new application\n- PUT /api/permohonan/:id - Update application\n- POST /api/permohonan/:id/dokumen - Upload document\n- POST /api/dokumen/:id/verifikasi - Verify document\n- POST /api/permohonan/:id/notifikasi-perbaikan - Send correction notification\n- POST /api/permohonan/:id/registrasi - Finalize and register\n- GET /api/permohonan/:id/tanda-terima - Generate PDF receipt\n- GET /api/permohonan/:id/status - Get application status\n- POST /api/internal/trigger-workflow - Trigger workflow service",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "1. Application Management",
+			"item": [
+				{
+					"name": "Create New Permohonan",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.environment.set(\"PERMOHONAN_ID\", jsonData.data.id);",
+									"    console.log(\"Permohonan ID saved: \" + jsonData.data.id);",
+									"}",
+									"",
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"pm.test(\"Response has permohonan data\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('data');",
+									"    pm.expect(jsonData.data).to.have.property('id');",
+									"    pm.expect(jsonData.data).to.have.property('user_id');",
+									"    pm.expect(jsonData.data).to.have.property('status');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{AUTH_HEADER}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"data_pemohon\": {\n        \"nama\": \"John Doe\",\n        \"alamat\": \"Jl. Merdeka No. 123\",\n        \"telepon\": \"081234567890\",\n        \"email\": \"john@example.com\",\n        \"jenis_izin\": \"Izin Mendirikan Bangunan\",\n        \"lokasi_izin\": \"Jl. Sudirman No. 45\"\n    }\n}"
+						},
+						"url": {
+							"raw": "{{BASE_URL}}/api/permohonan",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"api",
+								"permohonan"
+							]
+						},
+						"description": "Create a new application (permohonan). Requires authentication token."
+					},
+					"response": []
+				},
+				{
+					"name": "Update Permohonan",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Permohonan updated successfully\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.message).to.include('updated successfully');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{AUTH_HEADER}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"data_pemohon\": {\n        \"nama\": \"John Doe Updated\",\n        \"alamat\": \"Jl. Merdeka No. 123 (Updated)\",\n        \"telepon\": \"081234567890\",\n        \"email\": \"john.updated@example.com\",\n        \"jenis_izin\": \"Izin Mendirikan Bangunan\",\n        \"lokasi_izin\": \"Jl. Sudirman No. 45\"\n    }\n}"
+						},
+						"url": {
+							"raw": "{{BASE_URL}}/api/permohonan/:id",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"api",
+								"permohonan",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "{{PERMOHONAN_ID}}",
+									"description": "Permohonan ID"
+								}
+							]
+						},
+						"description": "Update existing permohonan data. User can only update their own application."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Application Status",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Status data returned\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.data).to.have.property('status');",
+									"    pm.expect(jsonData.data).to.have.property('nomor_registrasi');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{AUTH_HEADER}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{BASE_URL}}/api/permohonan/:id/status",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"api",
+								"permohonan",
+								":id",
+								"status"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "{{PERMOHONAN_ID}}",
+									"description": "Permohonan ID"
+								}
+							]
+						},
+						"description": "Get current status of application"
+					},
+					"response": []
+				}
+			],
+			"description": "Endpoints untuk manajemen permohonan dasar"
+		},
+		{
+			"name": "2. Document Management",
+			"item": [
+				{
+					"name": "Upload Document",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.environment.set(\"DOKUMEN_ID\", jsonData.data.id);",
+									"    console.log(\"Dokumen ID saved: \" + jsonData.data.id);",
+									"}",
+									"",
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"pm.test(\"Document uploaded successfully\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.data).to.have.property('path_file');",
+									"    pm.expect(jsonData.data).to.have.property('status_verifikasi');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{AUTH_HEADER}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "file",
+									"type": "file",
+									"src": []
+								},
+								{
+									"key": "jenis_dokumen",
+									"value": "KTP",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{BASE_URL}}/api/permohonan/:id/dokumen",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"api",
+								"permohonan",
+								":id",
+								"dokumen"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "{{PERMOHONAN_ID}}",
+									"description": "Permohonan ID"
+								}
+							]
+						},
+						"description": "Upload document file for permohonan. Accepts: jpeg, jpg, png, pdf, doc, docx. Max 5MB."
+					},
+					"response": []
+				},
+				{
+					"name": "Verify Document (Admin/OPD)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Document verified\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.data.status_verifikasi).to.be.oneOf(['verified', 'rejected']);",
+									"    pm.expect(jsonData.data).to.have.property('verified_at');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{AUTH_HEADER}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"status_verifikasi\": \"verified\",\n    \"catatan_verifikasi\": \"Dokumen lengkap dan sesuai\"\n}"
+						},
+						"url": {
+							"raw": "{{BASE_URL}}/api/dokumen/:id/verifikasi",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"api",
+								"dokumen",
+								":id",
+								"verifikasi"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "{{DOKUMEN_ID}}",
+									"description": "Dokumen ID"
+								}
+							]
+						},
+						"description": "Verify or reject uploaded document. Requires Admin or OPD role."
+					},
+					"response": []
+				}
+			],
+			"description": "Endpoints untuk upload dan verifikasi dokumen"
+		},
+		{
+			"name": "3. Application Processing",
+			"item": [
+				{
+					"name": "Send Correction Notification (Admin/OPD)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Notification sent\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.message).to.include('sent successfully');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{AUTH_HEADER}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"pesan\": \"Permohonan Anda memerlukan perbaikan\",\n    \"catatan\": \"Mohon lengkapi dokumen KTP dan Surat Kuasa\"\n}"
+						},
+						"url": {
+							"raw": "{{BASE_URL}}/api/permohonan/:id/notifikasi-perbaikan",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"api",
+								"permohonan",
+								":id",
+								"notifikasi-perbaikan"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "{{PERMOHONAN_ID}}",
+									"description": "Permohonan ID"
+								}
+							]
+						},
+						"description": "Send notification to applicant for corrections. Requires Admin or OPD role."
+					},
+					"response": []
+				},
+				{
+					"name": "Finalize & Register (Admin/OPD)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.environment.set(\"NOMOR_REGISTRASI\", jsonData.data.nomor_registrasi);",
+									"    console.log(\"Registration number: \" + jsonData.data.nomor_registrasi);",
+									"}",
+									"",
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Registration number generated\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.data).to.have.property('nomor_registrasi');",
+									"    pm.expect(jsonData.data.status).to.eql('terdaftar');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{AUTH_HEADER}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{BASE_URL}}/api/permohonan/:id/registrasi",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"api",
+								"permohonan",
+								":id",
+								"registrasi"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "{{PERMOHONAN_ID}}",
+									"description": "Permohonan ID"
+								}
+							]
+						},
+						"description": "Finalize application and assign registration number. Requires Admin or OPD role."
+					},
+					"response": []
+				},
+				{
+					"name": "Generate PDF Receipt",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Content type is PDF\", function () {",
+									"    pm.response.to.have.header('Content-Type', 'application/pdf');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{AUTH_HEADER}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{BASE_URL}}/api/permohonan/:id/tanda-terima",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"api",
+								"permohonan",
+								":id",
+								"tanda-terima"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "{{PERMOHONAN_ID}}",
+									"description": "Permohonan ID"
+								}
+							]
+						},
+						"description": "Generate and download PDF receipt for registered application"
+					},
+					"response": []
+				}
+			],
+			"description": "Endpoints untuk proses permohonan lebih lanjut"
+		},
+		{
+			"name": "4. Internal Services",
+			"item": [
+				{
+					"name": "Trigger Workflow Service",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Workflow triggered\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.message).to.include('triggered successfully');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"permohonan_id\": {{PERMOHONAN_ID}}\n}"
+						},
+						"url": {
+							"raw": "{{BASE_URL}}/api/internal/trigger-workflow",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"api",
+								"internal",
+								"trigger-workflow"
+							]
+						},
+						"description": "Internal endpoint to trigger workflow service after registration is complete"
+					},
+					"response": []
+				}
+			],
+			"description": "Internal endpoints untuk komunikasi antar layanan"
+		}
+	],
+	"variable": [
+		{
+			"key": "BASE_URL",
+			"value": "http://localhost:3010",
+			"type": "default"
+		}
+	]
+}

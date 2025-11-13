@@ -1,0 +1,23 @@
+{
+  "development": {
+    "username": "root",
+    "password": "Enter*123",
+    "database": "jelita_users",
+    "host": "localhost",
+    "dialect": "mysql"
+  },
+  "test": {
+    "username": "root",
+    "password": "Enter*123",
+    "database": "jelita_users_test",
+    "host": "localhost",
+    "dialect": "mysql"
+  },
+  "production": {
+    "username": "root",
+    "password": "Enter*123",
+    "database": "jelita_users_prod",
+    "host": "localhost",
+    "dialect": "mysql"
+  }
+}

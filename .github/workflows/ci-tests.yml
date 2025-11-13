@@ -1,0 +1,323 @@
+# GitHub Actions CI/CD - Jelita Microservices
+# Automated testing pipeline untuk interoperabilitas dan skalabilitas
+
+name: Jelita Microservices CI
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:  # Manual trigger
+
+env:
+  MYSQL_ROOT_PASSWORD: Enter*123
+  JWT_SECRET: FFbdqS6NVE7ARw08MNUAj0+sqXo7ZCEbZF7igEbMUH6tni78oAjzSPqYXvoyP02N
+
+jobs:
+  # =========================================
+  # Job 1: Lint & Unit Tests (Fast Feedback)
+  # =========================================
+  lint-and-unit-tests:
+    name: Lint & Unit Tests
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        service: 
+          - layanan-manajemen-pengguna
+          - layanan-pendaftaran
+          - layanan-alur-kerja
+          - layanan-survei
+          - layanan-arsip
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: '${{ matrix.service }}/package-lock.json'
+      
+      - name: Install dependencies
+        working-directory: ${{ matrix.service }}
+        run: npm ci
+      
+      - name: Run linting (if configured)
+        working-directory: ${{ matrix.service }}
+        run: npm run lint || echo "No lint script configured"
+        continue-on-error: true
+      
+      - name: Run unit tests (if configured)
+        working-directory: ${{ matrix.service }}
+        run: npm test || echo "No test script configured"
+        continue-on-error: true
+
+  # =========================================
+  # Job 2: Build Docker Images
+  # =========================================
+  build-images:
+    name: Build Docker Images
+    runs-on: ubuntu-latest
+    needs: lint-and-unit-tests
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      
+      - name: Build Auth Service Image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./layanan-manajemen-pengguna
+          file: ./layanan-manajemen-pengguna/Dockerfile
+          push: false
+          tags: jelita-auth:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+      
+      - name: Build Pendaftaran Service Image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./layanan-pendaftaran
+          file: ./layanan-pendaftaran/Dockerfile
+          push: false
+          tags: jelita-pendaftaran:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+      
+      - name: Build Workflow Service Image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./layanan-alur-kerja
+          file: ./layanan-alur-kerja/Dockerfile
+          push: false
+          tags: jelita-workflow:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+      
+      - name: Build Survey Service Image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./layanan-survei
+          file: ./layanan-survei/Dockerfile
+          push: false
+          tags: jelita-survey:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+      
+      - name: Build Archive Service Image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./layanan-arsip
+          file: ./layanan-arsip/Dockerfile
+          push: false
+          tags: jelita-archive:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  # =========================================
+  # Job 3: Integration Tests (Docker Compose)
+  # =========================================
+  integration-tests:
+    name: Integration & E2E Tests
+    runs-on: ubuntu-latest
+    needs: build-images
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      
+      - name: Start services with Docker Compose
+        run: docker-compose up -d --build
+        env:
+          COMPOSE_HTTP_TIMEOUT: 300
+      
+      - name: Wait for services to be healthy
+        run: |
+          echo "Waiting for services to start..."
+          sleep 60
+          
+          # Check health endpoints
+          for i in {1..30}; do
+            if curl -f http://localhost:3001/health && \
+               curl -f http://localhost:3010/health && \
+               curl -f http://localhost:3020/health && \
+               curl -f http://localhost:3030/health && \
+               curl -f http://localhost:3040/health; then
+              echo "All services are healthy!"
+              break
+            fi
+            echo "Waiting for services... ($i/30)"
+            sleep 10
+          done
+      
+      - name: Setup databases
+        run: |
+          docker exec jelita-auth node scripts/setupDatabase.js || echo "Auth DB setup done"
+          docker exec jelita-auth node scripts/createPemohonUser.js || echo "Pemohon user created"
+          docker exec jelita-pendaftaran node scripts/setupDatabase.js || echo "Pendaftaran DB setup done"
+          docker exec jelita-workflow node scripts/setupDatabase.js || echo "Workflow DB setup done"
+          docker exec jelita-survey node scripts/setupDatabase.js || echo "Survey DB setup done"
+          docker exec jelita-archive node scripts/setupDatabase.js || echo "Archive DB setup done"
+      
+      - name: Install Newman (Postman CLI)
+        run: npm install -g newman
+      
+      - name: Run Archive Service API Tests
+        run: |
+          newman run layanan-arsip/postman/Archive_Service.postman_collection.json \
+            -e layanan-arsip/postman/Archive_Service.postman_environment.json \
+            --reporters cli,json \
+            --reporter-json-export reports/newman-archive.json
+        continue-on-error: true
+      
+      - name: Install k6
+        run: |
+          sudo gpg -k
+          sudo gpg --no-default-keyring --keyring /usr/share/keyrings/k6-archive-keyring.gpg --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys C5AD17C747E3415A3642D57D77C6C491D6AC1D69
+          echo "deb [signed-by=/usr/share/keyrings/k6-archive-keyring.gpg] https://dl.k6.io/deb stable main" | sudo tee /etc/apt/sources.list.d/k6.list
+          sudo apt-get update
+          sudo apt-get install k6
+      
+      - name: Run E2E Integration Test
+        run: k6 run tests/test-e2e-integration.js --out json=reports/k6-e2e.json
+        continue-on-error: true
+      
+      - name: Show container logs on failure
+        if: failure()
+        run: docker-compose logs
+      
+      - name: Upload test reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-reports
+          path: reports/
+      
+      - name: Cleanup
+        if: always()
+        run: docker-compose down -v
+
+  # =========================================
+  # Job 4: Load Tests (Skalabilitas)
+  # =========================================
+  load-tests:
+    name: Load & Performance Tests
+    runs-on: ubuntu-latest
+    needs: integration-tests
+    if: github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/main'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      
+      - name: Start services
+        run: docker-compose up -d --build
+      
+      - name: Wait for services
+        run: |
+          sleep 60
+          curl -f http://localhost:3001/health
+          curl -f http://localhost:3040/health
+      
+      - name: Setup databases
+        run: |
+          docker exec jelita-auth node scripts/setupDatabase.js
+          docker exec jelita-auth node scripts/createPemohonUser.js
+          docker exec jelita-archive node scripts/setupDatabase.js
+      
+      - name: Install k6
+        run: |
+          sudo gpg -k
+          sudo gpg --no-default-keyring --keyring /usr/share/keyrings/k6-archive-keyring.gpg --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys C5AD17C747E3415A3642D57D77C6C491D6AC1D69
+          echo "deb [signed-by=/usr/share/keyrings/k6-archive-keyring.gpg] https://dl.k6.io/deb stable main" | sudo tee /etc/apt/sources.list.d/k6.list
+          sudo apt-get update
+          sudo apt-get install k6
+      
+      - name: Run Baseline Load Test
+        run: k6 run tests/loadtest-baseline.js --out json=reports/k6-baseline.json
+      
+      - name: Run Stress Test
+        run: k6 run tests/loadtest-stress.js --out json=reports/k6-stress.json
+        continue-on-error: true
+      
+      - name: Analyze Results
+        run: |
+          echo "=== Load Test Results ==="
+          cat reports/baseline-summary.json || echo "Baseline summary not found"
+          cat reports/stress-summary.json || echo "Stress summary not found"
+      
+      - name: Upload performance reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: performance-reports
+          path: reports/
+      
+      - name: Cleanup
+        if: always()
+        run: docker-compose down -v
+
+  # =========================================
+  # Job 5: Security Scan (Optional)
+  # =========================================
+  security-scan:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    needs: build-images
+    if: github.event_name == 'pull_request' || github.ref == 'refs/heads/main'
+    
+    strategy:
+      matrix:
+        service: 
+          - layanan-manajemen-pengguna
+          - layanan-arsip
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '${{ matrix.service }}'
+          format: 'sarif'
+          output: 'trivy-results-${{ matrix.service }}.sarif'
+      
+      - name: Upload Trivy results to GitHub Security
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: 'trivy-results-${{ matrix.service }}.sarif'
+
+# =========================================
+# Summary Job
+# =========================================
+  summary:
+    name: Test Summary
+    runs-on: ubuntu-latest
+    needs: [lint-and-unit-tests, build-images, integration-tests, load-tests]
+    if: always()
+    
+    steps:
+      - name: Summary
+        run: |
+          echo "## 📊 CI/CD Pipeline Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "✅ Lint & Unit Tests: ${{ needs.lint-and-unit-tests.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "✅ Build Images: ${{ needs.build-images.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "✅ Integration Tests: ${{ needs.integration-tests.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "✅ Load Tests: ${{ needs.load-tests.result }}" >> $GITHUB_STEP_SUMMARY

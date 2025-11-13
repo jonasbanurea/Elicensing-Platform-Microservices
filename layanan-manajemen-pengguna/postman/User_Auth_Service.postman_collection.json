@@ -1,0 +1,226 @@
+{
+	"info": {
+		"_postman_id": "a1b2c3d4-e5f6-4789-a0b1-c2d3e4f5g6h7",
+		"name": "User & Auth Service - Layanan Manajemen Pengguna",
+		"description": "Postman collection untuk menguji layanan-manajemen-pengguna (User & Auth Service)\n\nEndpoints:\n- POST /api/auth/signin - Login dan mendapat JWT token\n- GET /api/auth/validate - Validasi JWT token\n- GET /api/users/:id/peran - Mendapatkan role dan hak akses user",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Authentication",
+			"item": [
+				{
+					"name": "Sign In",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Save token to environment variable",
+									"if (pm.response.code === 200) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.environment.set(\"TOKEN\", jsonData.accessToken);",
+									"    pm.environment.set(\"AUTH_HEADER\", \"Bearer \" + jsonData.accessToken);",
+									"    console.log(\"Token saved to environment variable\");",
+									"}",
+									"",
+									"// Test assertions",
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response has user info and accessToken\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('id');",
+									"    pm.expect(jsonData).to.have.property('username');",
+									"    pm.expect(jsonData).to.have.property('nama_lengkap');",
+									"    pm.expect(jsonData).to.have.property('role');",
+									"    pm.expect(jsonData).to.have.property('accessToken');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\": \"demo\",\n    \"password\": \"demo123\"\n}"
+						},
+						"url": {
+							"raw": "{{BASE_URL}}/api/auth/signin",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"signin"
+							]
+						},
+						"description": "Login dengan username dan password. Mengembalikan informasi user dan JWT access token.\n\nRequest Body:\n- username: string (required)\n- password: string (required)\n\nResponse:\n- id: integer\n- username: string\n- nama_lengkap: string\n- role: string (enum: Pemohon, Admin, OPD, Pimpinan)\n- accessToken: string (JWT token)"
+					},
+					"response": []
+				},
+				{
+					"name": "Validate Token",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Token is valid\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.valid).to.eql(true);",
+									"    pm.expect(jsonData).to.have.property('user');",
+									"});",
+									"",
+									"pm.test(\"User has id and role\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.user).to.have.property('id');",
+									"    pm.expect(jsonData.user).to.have.property('role');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{AUTH_HEADER}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{BASE_URL}}/api/auth/validate",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"validate"
+							]
+						},
+						"description": "Memvalidasi JWT token yang dikirim melalui Authorization header.\n\nHeaders:\n- Authorization: Bearer <token>\n\nResponse:\n- valid: boolean\n- user: object { id, role }"
+					},
+					"response": []
+				}
+			],
+			"description": "Endpoint untuk autentikasi dan validasi token"
+		},
+		{
+			"name": "Users",
+			"item": [
+				{
+					"name": "Get User Role & Permissions",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response has user details\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('id');",
+									"    pm.expect(jsonData).to.have.property('username');",
+									"    pm.expect(jsonData).to.have.property('role');",
+									"    pm.expect(jsonData).to.have.property('access');",
+									"});",
+									"",
+									"pm.test(\"Role is valid enum\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    var validRoles = ['Pemohon', 'Admin', 'OPD', 'Pimpinan'];",
+									"    pm.expect(validRoles).to.include(jsonData.role);",
+									"});",
+									"",
+									"pm.test(\"Access is an array\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.access).to.be.an('array');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{AUTH_HEADER}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{BASE_URL}}/api/users/:id/peran",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"api",
+								"users",
+								":id",
+								"peran"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "1",
+									"description": "User ID"
+								}
+							]
+						},
+						"description": "Mendapatkan role dan hak akses untuk user tertentu. Endpoint ini dilindungi dan memerlukan JWT token.\n\nHeaders:\n- Authorization: Bearer <token>\n\nPath Parameters:\n- id: integer (User ID)\n\nResponse:\n- id: integer\n- username: string\n- role: enum (Pemohon, Admin, OPD, Pimpinan)\n- access: array of strings (permission list)"
+					},
+					"response": []
+				}
+			],
+			"description": "Endpoint untuk manajemen user dan informasi terkait"
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "BASE_URL",
+			"value": "http://localhost:3005",
+			"type": "default"
+		}
+	]
+}

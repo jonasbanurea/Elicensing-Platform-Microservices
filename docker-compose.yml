@@ -1,0 +1,186 @@
+services:
+  # MySQL Database (shared untuk semua services)
+  mysql:
+    image: mysql:8.0
+    container_name: jelita-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: Enter*123
+      MYSQL_CHARACTER_SET_SERVER: utf8mb4
+      MYSQL_COLLATION_SERVER: utf8mb4_unicode_ci
+    ports:
+      - "3307:3306"  # Port 3307 di host → 3306 di container (avoid conflict)
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./docker/init-db:/docker-entrypoint-initdb.d
+    networks:
+      - jelita-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-pEnter*123"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # phpMyAdmin (optional - untuk management DB via web)
+  phpmyadmin:
+    image: phpmyadmin:latest
+    container_name: jelita-phpmyadmin
+    restart: unless-stopped
+    environment:
+      PMA_HOST: mysql
+      PMA_PORT: 3306
+      PMA_USER: root
+      PMA_PASSWORD: Enter*123
+    ports:
+      - "8080:80"
+    depends_on:
+      - mysql
+    networks:
+      - jelita-network
+
+  # Layanan Manajemen Pengguna (Auth Service) - Port 3001
+  auth-service:
+    build:
+      context: ./layanan-manajemen-pengguna
+      dockerfile: Dockerfile
+    container_name: jelita-auth
+    restart: unless-stopped
+    environment:
+      PORT: 3001
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_USER: root
+      DB_PASSWORD: Enter*123
+      DB_NAME: jelita_users
+      JWT_SECRET: FFbdqS6NVE7ARw08MNUAj0+sqXo7ZCEbZF7igEbMUH6tni78oAjzSPqYXvoyP02N
+      NODE_ENV: production
+    ports:
+      - "3001:3001"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - jelita-network
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Layanan Pendaftaran - Port 3010
+  pendaftaran-service:
+    build:
+      context: ./layanan-pendaftaran
+      dockerfile: Dockerfile
+    container_name: jelita-pendaftaran
+    restart: unless-stopped
+    environment:
+      PORT: 3010
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_USER: root
+      DB_PASSWORD: Enter*123
+      DB_NAME: jelita_pendaftaran
+      JWT_SECRET: FFbdqS6NVE7ARw08MNUAj0+sqXo7ZCEbZF7igEbMUH6tni78oAjzSPqYXvoyP02N
+      AUTH_SERVICE_URL: http://auth-service:3001
+      NODE_ENV: production
+    ports:
+      - "3010:3010"
+    depends_on:
+      mysql:
+        condition: service_healthy
+      auth-service:
+        condition: service_healthy
+    networks:
+      - jelita-network
+
+  # Layanan Alur Kerja (Workflow Service) - Port 3020
+  workflow-service:
+    build:
+      context: ./layanan-alur-kerja
+      dockerfile: Dockerfile
+    container_name: jelita-workflow
+    restart: unless-stopped
+    environment:
+      PORT: 3020
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_USER: root
+      DB_PASSWORD: Enter*123
+      DB_NAME: jelita_workflow
+      JWT_SECRET: FFbdqS6NVE7ARw08MNUAj0+sqXo7ZCEbZF7igEbMUH6tni78oAjzSPqYXvoyP02N
+      AUTH_SERVICE_URL: http://auth-service:3001
+      PENDAFTARAN_SERVICE_URL: http://pendaftaran-service:3010
+      ARCHIVE_SERVICE_URL: http://archive-service:3040
+      NODE_ENV: production
+    ports:
+      - "3020:3020"
+    depends_on:
+      mysql:
+        condition: service_healthy
+      auth-service:
+        condition: service_healthy
+    networks:
+      - jelita-network
+
+  # Layanan Survei (Survey/SKM Service) - Port 3030
+  survey-service:
+    build:
+      context: ./layanan-survei
+      dockerfile: Dockerfile
+    container_name: jelita-survey
+    restart: unless-stopped
+    environment:
+      PORT: 3030
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_USER: root
+      DB_PASSWORD: Enter*123
+      DB_NAME: jelita_survei
+      JWT_SECRET: FFbdqS6NVE7ARw08MNUAj0+sqXo7ZCEbZF7igEbMUH6tni78oAjzSPqYXvoyP02N
+      AUTH_SERVICE_URL: http://auth-service:3001
+      ARCHIVE_SERVICE_URL: http://archive-service:3040
+      NODE_ENV: production
+    ports:
+      - "3030:3030"
+    depends_on:
+      mysql:
+        condition: service_healthy
+      auth-service:
+        condition: service_healthy
+    networks:
+      - jelita-network
+
+  # Layanan Arsip (Archive Service) - Port 3040
+  archive-service:
+    build:
+      context: ./layanan-arsip
+      dockerfile: Dockerfile
+    container_name: jelita-archive
+    restart: unless-stopped
+    environment:
+      PORT: 3040
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_USER: root
+      DB_PASSWORD: Enter*123
+      DB_NAME: jelita_arsip
+      JWT_SECRET: FFbdqS6NVE7ARw08MNUAj0+sqXo7ZCEbZF7igEbMUH6tni78oAjzSPqYXvoyP02N
+      AUTH_SERVICE_URL: http://auth-service:3001
+      NODE_ENV: production
+    ports:
+      - "3040:3040"
+    depends_on:
+      mysql:
+        condition: service_healthy
+      auth-service:
+        condition: service_healthy
+    networks:
+      - jelita-network
+
+networks:
+  jelita-network:
+    driver: bridge
+
+volumes:
+  mysql_data:

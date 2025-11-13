@@ -1,0 +1,361 @@
+{
+  "info": {
+    "_postman_id": "workflow-service-001",
+    "name": "Workflow Service - Jelita",
+    "description": "API Collection untuk Layanan Alur Kerja (Workflow Service)\n\nService ini mengelola alur kerja internal untuk pemrosesan permohonan izin, meliputi:\n- Disposisi ke OPD\n- Kajian Teknis oleh OPD\n- Forward Draft Izin ke Pimpinan\n- Revisi Draft Izin\n- Receive Trigger dari Application Service",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{accessToken}}",
+        "type": "string"
+      }
+    ]
+  },
+  "item": [
+    {
+      "name": "1. Disposisi OPD",
+      "item": [
+        {
+          "name": "Create Disposisi to OPD",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 201\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has message and data\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('message');",
+                  "    pm.expect(jsonData).to.have.property('data');",
+                  "});",
+                  "",
+                  "pm.test(\"Disposisi has correct structure\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.data).to.have.property('id');",
+                  "    pm.expect(jsonData.data).to.have.property('permohonan_id');",
+                  "    pm.expect(jsonData.data).to.have.property('opd_id');",
+                  "    pm.expect(jsonData.data).to.have.property('status');",
+                  "    pm.expect(jsonData.data.status).to.equal('pending');",
+                  "});",
+                  "",
+                  "// Save disposisi_id for later use",
+                  "if (pm.response.code === 201) {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.environment.set(\"disposisi_id\", jsonData.data.id);",
+                  "    console.log(\"Saved disposisi_id: \" + jsonData.data.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"permohonan_id\": {{permohonan_id}},\n  \"nomor_registrasi\": \"REG/2024/01/0001\",\n  \"opd_id\": {{opd_user_id}},\n  \"catatan_disposisi\": \"Mohon segera dilakukan kajian teknis untuk permohonan ini\"\n}"
+            },
+            "url": {
+              "raw": "{{workflow_base_url}}/api/workflow/disposisi-opd",
+              "host": [
+                "{{workflow_base_url}}"
+              ],
+              "path": [
+                "api",
+                "workflow",
+                "disposisi-opd"
+              ]
+            },
+            "description": "**Role Required**: Admin\n\nMembuat disposisi untuk menugaskan permohonan kepada OPD tertentu untuk kajian teknis."
+          },
+          "response": []
+        }
+      ],
+      "description": "Endpoint untuk mengelola disposisi permohonan ke OPD (Organisasi Perangkat Daerah)"
+    },
+    {
+      "name": "2. Kajian Teknis",
+      "item": [
+        {
+          "name": "Input Kajian Teknis",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 201\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has message and data\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('message');",
+                  "    pm.expect(jsonData).to.have.property('data');",
+                  "});",
+                  "",
+                  "pm.test(\"Kajian has correct structure\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.data).to.have.property('id');",
+                  "    pm.expect(jsonData.data).to.have.property('hasil_kajian');",
+                  "    pm.expect(jsonData.data).to.have.property('rekomendasi');",
+                  "    pm.expect(jsonData.data.reviewer_id).to.not.be.null;",
+                  "});",
+                  "",
+                  "// Save kajian_id for later use",
+                  "if (pm.response.code === 201) {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.environment.set(\"kajian_id\", jsonData.data.id);",
+                  "    console.log(\"Saved kajian_id: \" + jsonData.data.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"permohonan_id\": {{permohonan_id}},\n  \"opd_id\": {{opd_user_id}},\n  \"hasil_kajian\": \"disetujui\",\n  \"rekomendasi\": \"Permohonan disetujui dengan catatan untuk memperhatikan aspek lingkungan\",\n  \"catatan_teknis\": \"Lokasi memenuhi syarat zonasi. Tidak ada kendala teknis yang signifikan.\",\n  \"lampiran\": [\n    {\n      \"nama_file\": \"peta_lokasi_survey.pdf\",\n      \"url\": \"/uploads/peta_lokasi_survey.pdf\"\n    },\n    {\n      \"nama_file\": \"foto_kondisi_eksisting.jpg\",\n      \"url\": \"/uploads/foto_kondisi.jpg\"\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{workflow_base_url}}/api/workflow/kajian-teknis",
+              "host": [
+                "{{workflow_base_url}}"
+              ],
+              "path": [
+                "api",
+                "workflow",
+                "kajian-teknis"
+              ]
+            },
+            "description": "**Role Required**: OPD\n\nOPD melakukan input hasil kajian teknis terhadap permohonan yang telah didisposisikan.\n\n**Nilai hasil_kajian**:\n- `disetujui`\n- `ditolak`\n- `perlu_revisi`"
+          },
+          "response": []
+        }
+      ],
+      "description": "Endpoint untuk OPD melakukan kajian teknis terhadap permohonan"
+    },
+    {
+      "name": "3. Draft Izin",
+      "item": [
+        {
+          "name": "Forward Draft to Pimpinan",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 201\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has message and data\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('message');",
+                  "    pm.expect(jsonData).to.have.property('data');",
+                  "});",
+                  "",
+                  "pm.test(\"Draft has correct status\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.data).to.have.property('status');",
+                  "    pm.expect(jsonData.data.status).to.equal('dikirim_ke_pimpinan');",
+                  "    pm.expect(jsonData.data).to.have.property('tanggal_kirim_pimpinan');",
+                  "});",
+                  "",
+                  "// Save draft_id for later use",
+                  "if (pm.response.code === 201) {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.environment.set(\"draft_id\", jsonData.data.id);",
+                  "    console.log(\"Saved draft_id: \" + jsonData.data.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"permohonan_id\": {{permohonan_id}},\n  \"nomor_registrasi\": \"REG/2024/01/0001\",\n  \"nomor_draft\": \"DRAFT/2024/01/0001\",\n  \"isi_draft\": \"KEPUTUSAN KEPALA DAERAH\\nNOMOR: DRAFT/2024/01/0001\\n\\nTENTANG\\nPERSETUJUAN IZIN MENDIRIKAN BANGUNAN\\n\\nKEPALA DAERAH,\\n\\nMenimbang:\\na. Bahwa berdasarkan permohonan...\\nb. Bahwa berdasarkan hasil kajian teknis...\\n\\nMengingat:\\n1. Undang-Undang...\\n2. Peraturan Daerah...\\n\\nMEMUTUSKAN:\\n\\nMenetapkan:\\nKESATU: Menyetujui permohonan izin...\\nKEDUA: Izin berlaku selama...\\nKETIGA: Keputusan ini mulai berlaku...\\n\\nDitetapkan di: ...\\nPada tanggal: ...\\n\\nKEPALA DAERAH,\\n\\n(Nama Pejabat)\"\n}"
+            },
+            "url": {
+              "raw": "{{workflow_base_url}}/api/workflow/forward-to-pimpinan",
+              "host": [
+                "{{workflow_base_url}}"
+              ],
+              "path": [
+                "api",
+                "workflow",
+                "forward-to-pimpinan"
+              ]
+            },
+            "description": "**Role Required**: Admin\n\nAdmin membuat draft izin dan mengirimkannya ke Pimpinan untuk review dan persetujuan."
+          },
+          "response": []
+        },
+        {
+          "name": "Request Revisi Draft",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 201\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has message and data\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('message');",
+                  "    pm.expect(jsonData).to.have.property('data');",
+                  "    pm.expect(jsonData.data).to.have.property('revisi');",
+                  "    pm.expect(jsonData.data).to.have.property('draft');",
+                  "});",
+                  "",
+                  "pm.test(\"Draft status updated to perlu_revisi\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.data.draft.status).to.equal('perlu_revisi');",
+                  "});",
+                  "",
+                  "pm.test(\"Revisi record created\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.data.revisi).to.have.property('id');",
+                  "    pm.expect(jsonData.data.revisi).to.have.property('catatan_revisi');",
+                  "    pm.expect(jsonData.data.revisi.status).to.equal('pending');",
+                  "});",
+                  "",
+                  "// Save revisi_id for later use",
+                  "if (pm.response.code === 201) {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.environment.set(\"revisi_id\", jsonData.data.revisi.id);",
+                  "    console.log(\"Saved revisi_id: \" + jsonData.data.revisi.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"draft_id\": {{draft_id}},\n  \"catatan_revisi\": \"Mohon untuk memperbaiki bagian pertimbangan hukum pada poin b. Tambahkan referensi ke Perda terbaru No. 5 Tahun 2024. Serta pastikan format penomoran sesuai dengan standar terbaru.\"\n}"
+            },
+            "url": {
+              "raw": "{{workflow_base_url}}/api/workflow/revisi-draft",
+              "host": [
+                "{{workflow_base_url}}"
+              ],
+              "path": [
+                "api",
+                "workflow",
+                "revisi-draft"
+              ]
+            },
+            "description": "**Role Required**: Pimpinan\n\nPimpinan meminta revisi terhadap draft izin yang telah dikirimkan."
+          },
+          "response": []
+        }
+      ],
+      "description": "Endpoint untuk mengelola draft izin dan revisi"
+    },
+    {
+      "name": "4. Internal Trigger",
+      "item": [
+        {
+          "name": "Receive Trigger from Application Service",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 201\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has created disposisi\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('id');",
+                  "    pm.expect(jsonData).to.have.property('permohonan_id');",
+                  "    pm.expect(jsonData).to.have.property('opd_id');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"permohonan_id\": {{permohonan_id}},\n  \"opd_id\": {{opd_user_id}}\n}"
+            },
+            "url": {
+              "raw": "{{workflow_base_url}}/api/internal/receive-trigger",
+              "host": [
+                "{{workflow_base_url}}"
+              ],
+              "path": [
+                "api",
+                "internal",
+                "receive-trigger"
+              ]
+            },
+            "description": "**No Auth Required** (Internal Service Communication)\n\nEndpoint internal yang dipanggil oleh Application Service untuk memulai workflow setelah registrasi permohonan berhasil.\n\n**Note**: Endpoint ini untuk komunikasi antar service, bukan untuk akses langsung dari client."
+          },
+          "response": []
+        }
+      ],
+      "description": "Endpoint internal untuk komunikasi antar service"
+    }
+  ],
+  "variable": [
+    {
+      "key": "workflow_base_url",
+      "value": "http://localhost:3020",
+      "type": "string"
+    }
+  ]
+}
