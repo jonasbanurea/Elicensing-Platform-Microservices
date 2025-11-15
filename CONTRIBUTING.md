@@ -21,8 +21,8 @@ This project is a research implementation demonstrating the transformation from 
 
 1. **Clone the repository**
 ```bash
-git clone https://github.com/jonasbanurea/jelita-microservices.git
-cd jelita-microservices
+git clone https://github.com/jonasbanurea/jelita-platform-microservices.git
+cd jelita-platform-microservices
 ```
 
 2. **Run the stack**

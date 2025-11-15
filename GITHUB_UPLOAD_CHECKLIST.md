@@ -49,7 +49,7 @@ git add .
 git commit -m "Initial commit: Jelita Microservices - Monolith to Microservices Transformation"
 
 # Add remote (replace with your repo URL)
-git remote add origin https://github.com/jonasbanurea/jelita-microservices.git
+git remote add origin https://github.com/jonasbanurea/jelita-platform-microservices.git
 
 # Push
 git push -u origin main
@@ -123,8 +123,8 @@ Add these badges at the top of README.md:
 ![JWT](https://img.shields.io/badge/JWT-black?style=for-the-badge&logo=JSON%20web%20tokens)
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-![GitHub last commit](https://img.shields.io/github/last-commit/jonasbanurea/jelita-microservices)
-![GitHub issues](https://img.shields.io/github/issues/jonasbanurea/jelita-microservices)
+![GitHub last commit](https://img.shields.io/github/last-commit/jonasbanurea/jelita-platform-microservices)
+![GitHub issues](https://img.shields.io/github/issues/jonasbanurea/jelita-platform-microservices)
 ```
 
 ---
@@ -225,7 +225,7 @@ For academic use, provide this citation:
   school  = {[Your University Name]},
   year    = {2025},
   type    = {Master's Thesis},
-  url     = {https://github.com/jonasbanurea/jelita-microservices}
+   url     = {https://github.com/jonasbanurea/jelita-platform-microservices}
 }
 ```
 
