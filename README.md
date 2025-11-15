@@ -1,41 +1,41 @@
 # 🏛️ Jelita Licensing Service - Microservices Architecture
 
-> **Transformasi Sistem Monolith ke Microservices untuk Meningkatkan Skalabilitas dan Interoperabilitas**
+> **Monolith to Microservices Transformation for Enhanced Scalability and Interoperability**
 
-Sistem Layanan Perizinan berbasis microservices menggunakan Node.js, Express, MySQL, dan Docker.
+Licensing service system built with microservices architecture using Node.js, Express, MySQL, and Docker.
 
 ---
 
-## 📖 Daftar Isi
+## 📖 Table of Contents
 
 - [Overview](#overview)
-- [Arsitektur Microservices](#arsitektur-microservices)
+- [Microservices Architecture](#microservices-architecture)
 - [Services](#services)
 - [Quick Start](#quick-start)
 - [Testing & Validation](#testing--validation)
 - [Deployment](#deployment)
-- [Dokumentasi](#dokumentasi)
+- [Documentation](#documentation)
 
 ---
 
 ## 🎯 Overview
 
-### Rumusan Masalah yang Diselesaikan
+### Problems Addressed
 
-1. **Skalabilitas**: Sistem monolith sulit di-scale, bottleneck di satu komponen menghambat seluruh sistem
-2. **Interoperabilitas**: Sistem monolith sulit diintegrasikan dengan sistem eksternal
+1. **Scalability**: Monolithic systems are difficult to scale; bottlenecks in one component hinder the entire system
+2. **Interoperability**: Monolithic systems are difficult to integrate with external systems
 
-### Solusi Microservices
+### Microservices Solution
 
-- ✅ **Horizontal Scaling**: Setiap service dapat di-scale independent
-- ✅ **Independent Deployment**: Update satu service tanpa downtime keseluruhan
-- ✅ **Technology Diversity**: Setiap service bisa gunakan tech stack berbeda
-- ✅ **Fault Isolation**: Failure satu service tidak crash seluruh sistem
-- ✅ **API-First Design**: Interoperabilitas via RESTful APIs
+- ✅ **Horizontal Scaling**: Each service can be scaled independently
+- ✅ **Independent Deployment**: Update one service without system-wide downtime
+- ✅ **Technology Diversity**: Each service can use different tech stacks
+- ✅ **Fault Isolation**: Failure in one service doesn't crash the entire system
+- ✅ **API-First Design**: Interoperability via RESTful APIs
 
 ---
 
-## 🏗️ Arsitektur Microservices
+## 🏗️ Microservices Architecture
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
@@ -43,7 +43,7 @@ Sistem Layanan Perizinan berbasis microservices menggunakan Node.js, Express, My
 ├─────────────────────────────────────────────────────────────┤
 │                                                               │
 │  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐      │
-│  │ Auth Service │  │ Pendaftaran  │  │   Workflow   │      │
+│  │ Auth Service │  │ Application  │  │   Workflow   │      │
 │  │  Port 3001   │  │  Port 3010   │  │  Port 3020   │      │
 │  └──────┬───────┘  └──────┬───────┘  └──────┬───────┘      │
 │         │                  │                  │              │
@@ -76,7 +76,7 @@ Sistem Layanan Perizinan berbasis microservices menggunakan Node.js, Express, My
 ## 🔧 Services
 
 ### 1. Auth Service (Port 3001)
-**Tanggung Jawab**: Authentication & user management
+**Responsibility**: Authentication & user management
 - JWT token generation & validation
 - User CRUD operations
 - Role-based access control (Admin, OPD, Pimpinan, Pemohon)
@@ -84,26 +84,26 @@ Sistem Layanan Perizinan berbasis microservices menggunakan Node.js, Express, My
 **Database**: `jelita_users`
 - Table: `users` (id, username, password_hash, nama_lengkap, email, nomor_hp, peran)
 
-### 2. Pendaftaran Service (Port 3010)
-**Tanggung Jawab**: Application submission & management
-- Submit permohonan izin
-- Upload dokumen persyaratan
-- Track status permohonan
+### 2. Application Service (Port 3010)
+**Responsibility**: License application submission & management
+- Submit license applications
+- Upload required documents
+- Track application status
 
 **Database**: `jelita_pendaftaran`
-- Table: `permohonan` (id, user_id, jenis_izin, status, dll)
+- Table: `permohonan` (id, user_id, jenis_izin, status, etc)
 
 ### 3. Workflow Service (Port 3020)
-**Tanggung Jawab**: Internal processing workflow
-- Disposisi permohonan
-- Kajian teknis
+**Responsibility**: Internal processing workflow
+- Application disposition
+- Technical assessment
 - Approval/rejection flow
 
 **Database**: `jelita_workflow`
 - Tables: `disposisi`, `kajian_teknis`
 
 ### 4. Survey Service (Port 3030)
-**Tanggung Jawab**: Survei Kepuasan Masyarakat (SKM)
+**Responsibility**: Public Satisfaction Survey (SKM)
 - Collect feedback after license issuance
 - Trigger archive service
 
@@ -111,7 +111,7 @@ Sistem Layanan Perizinan berbasis microservices menggunakan Node.js, Express, My
 - Table: `skm` (survey data)
 
 ### 5. Archive Service (Port 3040)
-**Tanggung Jawab**: Digital archiving with access control
+**Responsibility**: Digital archiving with access control
 - Store final license documents
 - OPD access management
 - Archive retrieval with audit trail
@@ -125,55 +125,55 @@ Sistem Layanan Perizinan berbasis microservices menggunakan Node.js, Express, My
 
 ### Prerequisites
 
-- **Docker Desktop** running (Windows/Mac) atau Docker Engine (Linux)
-- **Node.js 18+** (untuk development lokal)
-- **MySQL 8.0** (jika run lokal tanpa Docker)
-- **Postman** atau **Newman** (untuk API testing)
-- **k6** (optional, untuk load testing)
+- **Docker Desktop** running (Windows/Mac) or Docker Engine (Linux)
+- **Node.js 18+** (for local development)
+- **MySQL 8.0** (if running locally without Docker)
+- **Postman** or **Newman** (for API testing)
+- **k6** (optional, for load testing)
 
-### 1. Persiapan Docker
+### 1. Docker Preparation
 
-**⚠️ PENTING**: Pastikan Docker Desktop running!
+**⚠️ IMPORTANT**: Make sure Docker Desktop is running!
 
 ```powershell
-# Verifikasi Docker
+# Verify Docker installation
 docker --version
 docker ps
 
-# Jika error, lihat DOCKER_PREREQUISITES.md
+# If error, see DOCKER_PREREQUISITES.md
 ```
 
 ### 2. Clone & Setup
 
 ```powershell
-# Navigasi ke folder prototype
+# Navigate to prototype folder
 cd d:\KULIAH\TESIS\prototype
 
-# Verifikasi struktur folder
+# Verify folder structure
 ls
-# Harus ada: layanan-manajemen-pengguna, layanan-pendaftaran, dll
+# Should contain: layanan-manajemen-pengguna, layanan-pendaftaran, etc
 ```
 
-### 3. Build & Run dengan Docker
+### 3. Build & Run with Docker
 
 ```powershell
-# Build dan jalankan semua services
+# Build and run all services
 docker-compose up -d --build
 
-# Cek status (semua harus "healthy")
+# Check status (all should be "healthy")
 docker-compose ps
 
-# Lihat logs
+# View logs
 docker-compose logs -f
 ```
 
 ### 4. Setup Database
 
 ```powershell
-# Jalankan script setup
+# Run setup script
 .\docker\setup-databases.ps1
 
-# Verifikasi via phpMyAdmin (optional)
+# Verify via phpMyAdmin (optional)
 # Browser: http://localhost:8080
 # User: root / Password: Enter*123
 ```
@@ -201,16 +201,16 @@ curl -X POST http://localhost:3001/api/auth/login `
 # Use token for subsequent requests
 ```
 
-**📚 Lihat dokumentasi lengkap**: [DOCKER_QUICK_START.md](DOCKER_QUICK_START.md)
+**📚 See complete documentation**: [DOCKER_QUICK_START.md](DOCKER_QUICK_START.md)
 
 ---
 
 ## 🧪 Testing & Validation
 
-### Tujuan Testing
+### Testing Objectives
 
-1. **Interoperabilitas**: Membuktikan service dapat berkomunikasi
-2. **Skalabilitas**: Mengukur performa di bawah load tinggi
+1. **Interoperability**: Prove that services can communicate
+2. **Scalability**: Measure performance under high load
 
 ### Test Suite
 
@@ -225,10 +225,10 @@ newman run layanan-arsip/postman/Archive_Service.postman_collection.json `
   -e layanan-arsip/postman/Archive_Service.postman_environment.json
 ```
 
-**Kriteria Pass**:
-- ✅ Semua endpoints return 200/201
-- ✅ JWT token valid di semua services
-- ✅ Service-to-service calls berhasil
+**Pass Criteria**:
+- ✅ All endpoints return 200/201
+- ✅ JWT token valid across all services
+- ✅ Service-to-service calls successful
 
 #### 2. End-to-End Integration Tests (k6)
 
@@ -240,18 +240,18 @@ choco install k6
 k6 run tests/test-e2e-integration.js
 ```
 
-**Flow yang di-test**:
-1. Login Admin
-2. Submit Permohonan
-3. Workflow Disposisi
+**Test Flow**:
+1. Admin Login
+2. Submit Application
+3. Workflow Disposition
 4. Trigger Archive
-5. Archive Izin
-6. Set Hak Akses OPD
+5. Archive License
+6. Set OPD Access Rights
 7. Verify OPD Access
 
-**Kriteria Pass**:
+**Pass Criteria**:
 - ✅ Success rate ≥ 80%
-- ✅ Data konsisten antar services
+- ✅ Data consistent across services
 
 #### 3. Load Tests (Baseline)
 
@@ -265,28 +265,28 @@ k6 run tests/loadtest-baseline.js
 - ✅ Error rate < 1%
 - ✅ Throughput ≥ 100 req/s
 
-#### 4. Stress Tests (Skalabilitas)
+#### 4. Stress Tests (Scalability)
 
 ```powershell
 # Stress: 200+ Virtual Users
 k6 run tests/loadtest-stress.js
 ```
 
-**Kriteria Pass**:
+**Pass Criteria**:
 - ✅ p95 latency < 2s
 - ✅ Error rate < 5%
-- ✅ System tidak crash
+- ✅ System doesn't crash
 
 #### 5. Scaling Experiments
 
 ```powershell
-# Scale Auth Service ke 3 instances
+# Scale Auth Service to 3 instances
 docker-compose up -d --scale auth-service=3
 
-# Run load test lagi
+# Run load test again
 k6 run tests/loadtest-baseline.js
 
-# Compare: throughput meningkat?
+# Compare: throughput increased?
 ```
 
 **Expected Results**:
@@ -311,11 +311,11 @@ docker-compose logs -f archive-service
 
 ### Metrics Collection
 
-Setiap service expose health endpoint:
+Each service exposes a health endpoint:
 - `GET /health` → `{"status":"healthy","service":"auth","timestamp":"..."}`
 
 **Advanced** (optional): Setup Prometheus + Grafana
-- Lihat [DOCKER_DEPLOYMENT_GUIDE.md](DOCKER_DEPLOYMENT_GUIDE.md) bagian Observability
+- See [DOCKER_DEPLOYMENT_GUIDE.md](DOCKER_DEPLOYMENT_GUIDE.md) Observability section
 
 ---
 
@@ -327,18 +327,18 @@ File: `.github/workflows/ci-tests.yml`
 
 **Pipeline Stages**:
 1. **Lint & Unit Tests** (parallel per service)
-2. **Build Docker Images** (dengan caching)
+2. **Build Docker Images** (with caching)
 3. **Integration Tests** (Newman + k6 E2E)
 4. **Load Tests** (baseline + stress)
 5. **Security Scan** (Trivy)
 
-**Trigger**: Push ke `main`, PR, atau manual workflow dispatch
+**Trigger**: Push to `main`, PR, or manual workflow dispatch
 
 **Artifacts**: Test reports uploaded (JSON)
 
 ---
 
-## 📁 Struktur Folder
+## 📁 Folder Structure
 
 ```
 prototype/
@@ -350,7 +350,7 @@ prototype/
 │   ├── Dockerfile
 │   ├── .env
 │   └── server.js
-├── layanan-pendaftaran/           # Pendaftaran Service
+├── layanan-pendaftaran/           # Application Service
 ├── layanan-alur-kerja/            # Workflow Service
 ├── layanan-survei/                # Survey Service
 ├── layanan-arsip/                 # Archive Service
@@ -376,7 +376,7 @@ prototype/
 
 ---
 
-## 📚 Dokumentasi
+## 📚 Documentation
 
 ### Getting Started
 - **[DOCKER_PREREQUISITES.md](DOCKER_PREREQUISITES.md)** - Setup Docker Desktop
@@ -394,65 +394,65 @@ prototype/
 
 ---
 
-## 🎓 Untuk Tesis
+## 🎓 For Thesis
 
-### Bukti Penyelesaian Rumusan Masalah
+### Evidence of Problem Resolution
 
-#### 1. Skalabilitas ✅
+#### 1. Scalability ✅
 
-**Metrik**:
+**Metrics**:
 - Baseline (10 VUs): p95 < 500ms, throughput X req/s
 - Stress (200 VUs): p95 < 2s, error rate < 5%
-- Scaling (3x instances): throughput meningkat 2-3x
+- Scaling (3x instances): throughput increased 2-3x
 
-**Dokumentasi**:
+**Documentation**:
 - Load test reports: `reports/baseline-summary.json`, `reports/stress-summary.json`
 - Docker stats screenshots
 - Grafana dashboards (optional)
 
-#### 2. Interoperabilitas ✅
+#### 2. Interoperability ✅
 
-**Metrik**:
+**Metrics**:
 - E2E flow success rate ≥ 80%
-- Service-to-service calls berhasil (Survey → Archive)
-- JWT validation di semua services
-- API contracts (OpenAPI) konsisten
+- Service-to-service calls successful (Survey → Archive)
+- JWT validation across all services
+- API contracts (OpenAPI) consistent
 
-**Dokumentasi**:
+**Documentation**:
 - Newman test reports: `reports/newman-archive.json`
 - E2E test reports: `reports/e2e-summary.json`
-- Postman collections sebagai API documentation
+- Postman collections as API documentation
 
 ---
 
 ## 🆘 Troubleshooting
 
-### Docker tidak running
+### Docker not running
 
 ```powershell
-# Start Docker Desktop dari Start Menu
-# Tunggu icon 🐳 aktif
+# Start Docker Desktop from Start Menu
+# Wait for 🐳 icon to be active
 
-# Verifikasi
+# Verify
 docker ps
 ```
 
 ### Port conflict
 
 ```powershell
-# Cari process di port
+# Find process on port
 netstat -ano | findstr ":3001"
 
 # Kill process
 taskkill /F /PID <PID>
 
-# Atau ubah port di docker-compose.yml
+# Or change port in docker-compose.yml
 ```
 
 ### Container unhealthy
 
 ```powershell
-# Cek logs
+# Check logs
 docker-compose logs auth-service
 
 # Restart service
@@ -463,19 +463,19 @@ docker-compose down -v
 docker-compose up -d --build
 ```
 
-**Lihat troubleshooting lengkap**: [DOCKER_DEPLOYMENT_GUIDE.md](DOCKER_DEPLOYMENT_GUIDE.md#troubleshooting)
+**See complete troubleshooting**: [DOCKER_DEPLOYMENT_GUIDE.md](DOCKER_DEPLOYMENT_GUIDE.md#troubleshooting)
 
 ---
 
 ## 🚀 Next Steps
 
 1. **Development**:
-   - Tambahkan unit tests per service
+   - Add unit tests per service
    - Implement contract testing (Pact)
    - Setup API gateway (Kong/Traefik)
 
 2. **Production**:
-   - Deploy ke Kubernetes
+   - Deploy to Kubernetes
    - Setup monitoring (Prometheus + Grafana)
    - Implement distributed tracing (Jaeger)
    - Add circuit breakers (opossum)
@@ -490,16 +490,16 @@ docker-compose up -d --build
 
 ## 📞 Support
 
-Untuk pertanyaan atau issues:
-1. Baca dokumentasi di folder ini
-2. Cek [DOCKER_DEPLOYMENT_GUIDE.md](DOCKER_DEPLOYMENT_GUIDE.md) troubleshooting section
-3. Review GitHub Actions logs (jika menggunakan CI)
+For questions or issues:
+1. Read documentation in this folder
+2. Check [DOCKER_DEPLOYMENT_GUIDE.md](DOCKER_DEPLOYMENT_GUIDE.md) troubleshooting section
+3. Review GitHub Actions logs (if using CI)
 
 ---
 
 ## 📄 License
 
-Developed for thesis purpose - Transformasi Sistem Monolith ke Microservices
+Developed for thesis purpose - Monolith to Microservices Transformation
 
 ---
 
