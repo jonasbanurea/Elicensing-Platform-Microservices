@@ -67,7 +67,7 @@ Licensing service system built with microservices architecture using Node.js, Ex
 
 ### Communication Patterns
 
-- **Synchronous**: REST APIs dengan JWT authentication
+- **Synchronous**: REST APIs with JWT authentication
 - **Asynchronous**: Internal service-to-service calls (no auth)
 - **Data**: Database per service (polyglot persistence)
 
