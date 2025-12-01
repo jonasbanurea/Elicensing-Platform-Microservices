@@ -765,5 +765,3 @@ Created for Thesis: **Transforming Monolith System to Microservices**
 Questions or issues? Open an issue in the repository or contact the maintainer.
 
 ---
-
-**Happy Testing! 🚀**
