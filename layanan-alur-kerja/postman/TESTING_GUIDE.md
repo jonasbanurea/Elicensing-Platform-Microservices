@@ -1,71 +1,71 @@
-# Testing Guide - Workflow Service (Layanan Alur Kerja)
+# Testing Guide - Workflow Service
 
-## 📋 Daftar Isi
-1. [Pendahuluan](#pendahuluan)
-2. [Prasyarat](#prasyarat)
-3. [Setup Environment](#setup-environment)
-4. [Arsitektur Workflow](#arsitektur-workflow)
+## 📋 Table of Contents
+1. [Introduction](#introduction)
+2. [Prerequisites](#prerequisites)
+3. [Environment Setup](#environment-setup)
+4. [Workflow Architecture](#workflow-architecture)
 5. [Endpoint Overview](#endpoint-overview)
-6. [Testing Step-by-Step](#testing-step-by-step)
-7. [Role & Permissions](#role--permissions)
+6. [Step-by-Step Testing](#step-by-step-testing)
+7. [Roles & Permissions](#roles--permissions)
 8. [Troubleshooting](#troubleshooting)
 
 ---
 
-## 1. Pendahuluan
+## 1. Introduction
 
-### 1.1 Tentang Workflow Service
-Workflow Service adalah microservice yang mengelola **alur kerja internal** untuk pemrosesan permohonan izin dalam sistem Jelita. Service ini mengatur:
+### 1.1 About Workflow Service
+Workflow Service is a microservice that manages the **internal workflow** for permit application processing in the Jelita system. This service handles:
 
-- **Disposisi**: Penugasan permohonan ke OPD (Organisasi Perangkat Daerah)
-- **Kajian Teknis**: Review teknis oleh OPD
-- **Draft Izin**: Pembuatan dan pengiriman draft izin ke Pimpinan
-- **Revisi Draft**: Permintaan revisi dari Pimpinan
+- **Disposition**: Assigning applications to OPD (Regional Apparatus Organization)
+- **Technical Review**: Technical review by OPD
+- **Permit Draft**: Creating and sending permit draft to Leadership
+- **Draft Revision**: Revision requests from Leadership
 
 ### 1.2 Port & Database
 - **Port**: 3020
 - **Database**: `jelita_workflow`
 - **Base URL**: `http://localhost:3020`
 
-### 1.3 Integrasi dengan Service Lain
+### 1.3 Integration with Other Services
 ```
 ┌─────────────────────┐       ┌─────────────────────┐       ┌─────────────────────┐
 │  User & Auth        │       │  Application        │       │  Workflow           │
 │  Service (3001)     │◄──────┤  Service (3010)     │◄──────┤  Service (3020)     │
 │                     │       │                     │       │                     │
-│  - JWT Generation   │       │  - Permohonan       │       │  - Disposisi        │
-│  - User Validation  │       │  - Registrasi       │       │  - Kajian Teknis    │
-│                     │       │  - Trigger Workflow │       │  - Draft Izin       │
+│  - JWT Generation   │       │  - Application       │       │  - Disposition        │
+│  - User Validation  │       │  - Registration       │       │  - Technical Review    │
+│                     │       │  - Trigger Workflow │       │  - Permit Draft       │
 └─────────────────────┘       └─────────────────────┘       └─────────────────────┘
 ```
 
 ---
 
-## 2. Prasyarat
+## 2. Prerequisites
 
 ### 2.1 Software Requirements
-✅ Node.js v14+ terinstall  
+✅ Node.js v14+ installed  
 ✅ MySQL Server 8.0+ running  
-✅ Postman Desktop App atau Postman Web  
-✅ User & Auth Service (Port 3001) berjalan  
-✅ Application Service (Port 3010) berjalan  
+✅ Postman Desktop App or Postman Web  
+✅ User & Auth Service (Port 3001) running  
+✅ Application Service (Port 3010) running  
 
 ### 2.2 Test Data Requirements
-Pastikan Anda memiliki:
-- ✅ User dengan role **Admin** (username: `demo`, password: `demo123`)
-- ✅ User dengan role **OPD** (untuk testing kajian teknis)
-- ✅ User dengan role **Pimpinan** (untuk testing revisi draft)
-- ✅ Minimal 1 permohonan yang sudah ter-registrasi dari Application Service
+Ensure you have:
+- ✅ User with role **Admin** (username: `demo`, password: `demo123`)
+- ✅ User with role **OPD** (for testing technical review)
+- ✅ User with role **Pimpinan** (for testing draft revision)
+- ✅ At least 1 registered application from Application Service
 
 ### 2.3 Database Setup
 ```bash
-# Masuk ke direktori layanan-alur-kerja
-cd d:\KULIAH\TESIS\prototype\layanan-alur-kerja
+# Navigate to layanan-alur-kerja directory
+cd d:\KULIAH\TESIS\prototype_eng\layanan-alur-kerja
 
 # Install dependencies
 npm install
 
-# Buat database
+# Create database
 node scripts/createDatabase.js
 
 # Sync models (create tables)
@@ -88,24 +88,24 @@ node scripts/setupDatabase.js
 
 ---
 
-## 3. Setup Environment
+## 3. Environment Setup
 
-### 3.1 Import Collection & Environment ke Postman
+### 3.1 Import Collection & Environment to Postman
 
 **Step 1: Import Collection**
-1. Buka Postman
-2. Click **Import** (kiri atas)
+1. Open Postman
+2. Click **Import** (top left)
 3. Drag & drop file: `postman/Workflow_Service.postman_collection.json`
 4. Click **Import**
 
 **Step 2: Import Environment**
-1. Click **Import** lagi
+1. Click **Import** again
 2. Drag & drop file: `postman/Workflow_Service.postman_environment.json`
 3. Click **Import**
 
-**Step 3: Aktifkan Environment**
-1. Pilih dropdown di kanan atas (No Environment)
-2. Pilih **"Workflow Service Environment"**
+**Step 3: Activate Environment**
+1. Select dropdown at top right (No Environment)
+2. Select **"Workflow Service Environment"**
 
 ### 3.2 Environment Variables
 
@@ -119,40 +119,40 @@ node scripts/setupDatabase.js
 | `admin_password` | `demo123` | Password untuk Admin |
 | `permohonan_id` | (manual/auto) | ID permohonan dari Application Service |
 | `opd_user_id` | (manual) | ID user dengan role OPD |
-| `disposisi_id` | (auto-saved) | ID disposisi yang dibuat |
-| `kajian_id` | (auto-saved) | ID kajian teknis yang dibuat |
-| `draft_id` | (auto-saved) | ID draft izin yang dibuat |
-| `revisi_id` | (auto-saved) | ID revisi yang dibuat |
+| `disposisi_id` | (auto-saved) | ID of created disposition |
+| `kajian_id` | (auto-saved) | ID of created technical review |
+| `draft_id` | (auto-saved) | ID of created permit draft |
+| `revisi_id` | (auto-saved) | ID of created revision |
 
 ---
 
-## 4. Arsitektur Workflow
+## 4. Workflow Architecture
 
 ### 4.1 Workflow Diagram
 
 ```
 ┌──────────────┐
-│  Permohonan  │
-│  Ter-        │
-│  registrasi  │
+│  Application  │
+│  Registered   │
+│              │
 └──────┬───────┘
        │
        ▼
 ┌──────────────────────┐
-│  1. DISPOSISI OPD    │  ◄─── Admin membuat disposisi
-│  (Admin)             │       ke OPD tertentu
+│  1. OPD DISPOSITION    │  ◄─── Admin creates disposition
+│  (Admin)             │       to specific OPD
 └──────┬───────────────┘
        │
        ▼
 ┌──────────────────────┐
-│  2. KAJIAN TEKNIS    │  ◄─── OPD melakukan kajian
-│  (OPD)               │       (disetujui/ditolak/
-└──────┬───────────────┘       perlu_revisi)
+│  2. TECHNICAL REVIEW    │  ◄─── OPD conducts review
+│  (OPD)               │       (approved/rejected/
+└──────┬───────────────┘       needs_revision)
        │
        ▼
 ┌──────────────────────┐
-│  3. DRAFT IZIN       │  ◄─── Admin membuat draft
-│  (Admin)             │       & kirim ke Pimpinan
+│  3. PERMIT DRAFT       │  ◄─── Admin creates draft
+│  (Admin)             │       & sends to Leadership
 └──────┬───────────────┘
        │
        ├─────────────────────┐
@@ -180,7 +180,7 @@ CREATE TABLE disposisi (
   permohonan_id INT NOT NULL,
   nomor_registrasi VARCHAR(255),
   opd_id INT NOT NULL COMMENT 'User ID dengan role OPD',
-  disposisi_dari INT NOT NULL COMMENT 'User ID Admin yang membuat',
+  disposisi_dari INT NOT NULL COMMENT 'Admin User ID who created',
   catatan_disposisi TEXT,
   status ENUM('pending', 'dikerjakan', 'selesai', 'ditolak') DEFAULT 'pending',
   tanggal_disposisi DATETIME,
@@ -214,7 +214,7 @@ CREATE TABLE draft_izin (
   nomor_registrasi VARCHAR(255),
   nomor_draft VARCHAR(255) UNIQUE NOT NULL,
   isi_draft TEXT NOT NULL,
-  dibuat_oleh INT NOT NULL COMMENT 'User ID Admin',
+  dibuat_oleh INT NOT NULL COMMENT 'Admin User ID',
   status ENUM('draft', 'dikirim_ke_pimpinan', 'disetujui', 'perlu_revisi', 'ditolak') 
     DEFAULT 'draft',
   tanggal_kirim_pimpinan DATETIME,
@@ -249,9 +249,9 @@ CREATE TABLE revisi_draft (
 
 | # | Endpoint | Method | Role | Description |
 |---|----------|--------|------|-------------|
-| 1 | `/api/workflow/disposisi-opd` | POST | Admin | Membuat disposisi ke OPD |
-| 2 | `/api/workflow/kajian-teknis` | POST | OPD | Input hasil kajian teknis |
-| 3 | `/api/workflow/forward-to-pimpinan` | POST | Admin | Kirim draft ke Pimpinan |
+| 1 | `/api/workflow/disposisi-opd` | POST | Admin | Create disposition to OPD |
+| 2 | `/api/workflow/kajian-teknis` | POST | OPD | Input technical review results |
+| 3 | `/api/workflow/forward-to-pimpinan` | POST | Admin | Send draft to Leadership |
 | 4 | `/api/workflow/revisi-draft` | POST | Pimpinan | Minta revisi draft |
 | 5 | `/api/internal/receive-trigger` | POST | Internal | Terima trigger dari App Service |
 
@@ -313,7 +313,7 @@ Gunakan collection **User & Auth Service** di Postman:
 
 ### 6.2 Test 1: Create Disposisi OPD
 
-**Objective**: Admin menugaskan permohonan ke OPD untuk kajian teknis.
+**Objective**: Admin assigns application to OPD for technical review.
 
 **Prerequisites**:
 - ✅ Login sebagai Admin (token tersimpan)
@@ -337,7 +337,7 @@ Content-Type: application/json
 **Expected Response** (201 Created):
 ```json
 {
-  "message": "Disposisi ke OPD berhasil dibuat",
+  "message": "OPD disposition created successfully",
   "data": {
     "id": 1,
     "permohonan_id": 1,
@@ -381,7 +381,7 @@ pm.environment.set("disposisi_id", pm.response.json().data.id);
 
 ### 6.3 Test 2: Input Kajian Teknis
 
-**Objective**: OPD melakukan kajian teknis dan memberikan rekomendasi.
+**Objective**: OPD conducts technical review and provides recommendations.
 
 **Prerequisites**:
 - ✅ Logout dari Admin, login sebagai **OPD**
@@ -415,7 +415,7 @@ Content-Type: application/json
 **Expected Response** (201 Created):
 ```json
 {
-  "message": "Kajian teknis berhasil dibuat",
+  "message": "Technical review created successfully",
   "data": {
     "id": 1,
     "permohonan_id": 1,
@@ -471,7 +471,7 @@ pm.environment.set("kajian_id", pm.response.json().data.id);
 
 ### 6.4 Test 3: Forward Draft to Pimpinan
 
-**Objective**: Admin membuat draft izin dan mengirimkannya ke Pimpinan untuk review.
+**Objective**: Admin creates permit draft and sends it to Leadership for review.
 
 **Prerequisites**:
 - ✅ Login sebagai **Admin**
@@ -494,7 +494,7 @@ Content-Type: application/json
 **Expected Response** (201 Created):
 ```json
 {
-  "message": "Draft izin berhasil dikirim ke pimpinan",
+  "message": "Permit draft successfully sent to leadership",
   "data": {
     "id": 1,
     "permohonan_id": 1,
@@ -538,7 +538,7 @@ pm.environment.set("draft_id", pm.response.json().data.id);
 
 ### 6.5 Test 4: Request Revisi Draft
 
-**Objective**: Pimpinan meminta revisi terhadap draft izin yang dikirimkan.
+**Objective**: Leadership requests revision to the submitted permit draft.
 
 **Prerequisites**:
 - ✅ Logout dari Admin, login sebagai **Pimpinan**
@@ -559,7 +559,7 @@ Content-Type: application/json
 **Expected Response** (201 Created):
 ```json
 {
-  "message": "Permintaan revisi draft berhasil dibuat",
+  "message": "Draft revision request created successfully",
   "data": {
     "revisi": {
       "id": 1,
@@ -629,7 +629,7 @@ pm.environment.set("revisi_id", pm.response.json().data.revisi.id);
 
 ### 6.6 Test 5: Receive Trigger (Internal)
 
-**Objective**: Application Service memicu workflow setelah registrasi permohonan.
+**Objective**: Application Service triggers workflow after application registration.
 
 **Prerequisites**:
 - ✅ Workflow Service berjalan di port 3020
@@ -1059,4 +1059,3 @@ Selamat! Anda telah menyelesaikan setup dan testing untuk **Workflow Service**.
 
 ---
 
-**Happy Testing! 🚀**
