@@ -419,7 +419,7 @@ prototype/
 
 ---
 
-## 🎓 For Thesis
+## 🎓 For Evaluation
 
 ### Evidence of Problem Resolution
 
@@ -531,8 +531,7 @@ For questions or issues:
 
 ## 📄 License
 
-Developed for thesis purpose - Monolith to Microservices Transformation
+Developed for research purpose - Monolith to Microservices Transformation
 
 ---
 
-**Happy Testing! 🚀**
