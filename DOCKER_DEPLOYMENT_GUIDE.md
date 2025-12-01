@@ -421,7 +421,7 @@ export let options = {
   stages: [
     { duration: '1m', target: 50 },   // Ramp to 50 users
     { duration: '3m', target: 100 },  // Ramp to 100 users
-    { duration: '2m', target: 200 },  // Ramp to 200 users (stress)
+    { duration: '2m', target: 300 },  // Ramp to 300 users (stress)
     { duration: '1m', target: 0 },    // Ramp down
   ],
   thresholds: {
@@ -704,7 +704,7 @@ services:
 
 ### Scalability ✅
 - [ ] Baseline: 10 VUs → avg latency < 100ms, p95 < 500ms
-- [ ] Stress: 200 VUs → p95 < 2s, error rate < 5%
+- [ ] Stress: 300 VUs → p95 < 2s, error rate < 5%
 - [ ] Horizontal scaling: 3 instances → throughput increases 2-3x
 - [ ] Database not a bottleneck (optimal connection pool)
 - [ ] Memory/CPU usage stable under load
@@ -760,8 +760,9 @@ docker-compose up -d --scale auth-service=3
 
 ## 👨‍💻 Contributors & Support
 
-Created for Research: **Developing a Microservices-Based Licensing Platform for West Java Using the SCSE Framework**
+Created for Thesis: **Transforming Monolith System to Microservices**
 
 Questions or issues? Open an issue in the repository or contact the maintainer.
 
 ---
+
