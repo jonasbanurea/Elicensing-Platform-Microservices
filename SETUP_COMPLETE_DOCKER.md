@@ -2,7 +2,7 @@
 
 ### 1. Docker Configuration (✅ Complete)
 
-**Files Created:**
+**Files:**
 - ✅ `layanan-manajemen-pengguna/Dockerfile` - Auth Service
 - ✅ `layanan-pendaftaran/Dockerfile` - Application Service
 - ✅ `layanan-alur-kerja/Dockerfile` - Workflow Service
