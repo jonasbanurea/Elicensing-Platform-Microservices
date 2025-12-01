@@ -54,7 +54,7 @@ Then in Postman:
 
 ---
 
-## 🧪 Testing Flow (Happy Path)
+## 🧪 Testing Flow 
 
 ### Recommended Testing Sequence:
 
@@ -223,3 +223,4 @@ See `postman/TESTING_GUIDE.md` file for:
 Server is running on **http://localhost:3010**
 
 Use Postman to test all endpoints. 
+
