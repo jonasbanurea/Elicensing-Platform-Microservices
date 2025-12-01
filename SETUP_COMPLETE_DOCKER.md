@@ -240,7 +240,7 @@ docker-compose logs -f
 Browser: **http://localhost:8080**
 - Server: `mysql`
 - Username: `root`
-- Password: `Enter*123`
+- Password: `**********`
 
 Verify:
 - Database `jelita_arsip` → table `arsip`
