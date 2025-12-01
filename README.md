@@ -36,7 +36,7 @@ Licensing service system built with microservices architecture using Node.js, Ex
 ### ⚡ Performance Highlights
 
 **Tested & Validated**:
-- ✅ **Baseline Load** (10 concurrent users): p95 latency **160ms**, error rate 6.68%
+- ✅ **Baseline Load** (10 concurrent users): p95 latency **160ms**, error rate < 1%
 - ⚠️ **Stress Load** (300 concurrent users): p95 latency 9.64s, error rate **27%**
 - 🎯 **Key Finding**: Login service bottleneck identified (p95 11.55s under stress)
 - 📊 **System Stability**: No crashes under 30x baseline load, graceful degradation
