@@ -134,7 +134,7 @@ curl http://localhost:3040/health
 
 ---
 
-## 🧪 Testing for Thesis
+## 🧪 Testing 
 
 ### 1. Interoperability Test (Newman)
 
@@ -248,7 +248,7 @@ Verify:
 
 ---
 
-## 📈 Testing Results for Thesis
+## 📈 Testing Results
 
 ### Interoperability ✅
 
@@ -359,7 +359,7 @@ docker-compose restart auth-service
 
 ---
 
-## 🎯 Checklist for Thesis
+## 🎯 Checklist 
 
 ### Setup ✅
 - [ ] Docker Desktop installed & running
@@ -393,7 +393,7 @@ docker-compose restart auth-service
 2. **Run**: `docker-compose up -d --build`
 3. **Setup**: `.\docker\setup-databases.ps1`
 4. **Test**: Run Newman & k6 tests
-5. **Collect**: Save test reports for thesis
+5. **Collect**: Save test reports 
 
 ---
 
