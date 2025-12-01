@@ -760,7 +760,7 @@ docker-compose up -d --scale auth-service=3
 
 ## 👨‍💻 Contributors & Support
 
-Created for Thesis: **Transforming Monolith System to Microservices**
+Created for Research: **Developing a Microservices-Based Licensing Platform for West Java Using the SCSE Framework**
 
 Questions or issues? Open an issue in the repository or contact the maintainer.
 
