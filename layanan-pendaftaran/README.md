@@ -208,7 +208,7 @@ See `postman/TESTING_GUIDE.md` file for:
 ## 🔄 Application Status
 
 | Status | Description |
-|--------|-----------||
+|--------|-----------|
 | `draft` | Newly created, not complete |
 | `perlu_perbaikan` | Needs revision from applicant |
 | `menunggu_verifikasi` | Document under verification process |
