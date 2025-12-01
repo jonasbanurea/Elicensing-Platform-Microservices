@@ -1,23 +1,23 @@
-# 🐳 Panduan Docker Deployment - Jelita Microservices
+# 🐳 Docker Deployment Guide - Jelita Microservices
 
-Panduan lengkap untuk deploy, menguji, dan menskalakan sistem Layanan Perizinan Jelita menggunakan Docker & Docker Compose.
+Comprehensive guide to deploy, test, and scale the Jelita Licensing Service system using Docker & Docker Compose.
 
-## 📋 Daftar Isi
+## 📋 Table of Contents
 
-1. [Arsitektur System](#arsitektur-system)
-2. [Prasyarat](#prasyarat)
+1. [System Architecture](#system-architecture)
+2. [Prerequisites](#prerequisites)
 3. [Quick Start](#quick-start)
-4. [Langkah Detail Deployment](#langkah-detail-deployment)
-5. [Testing Interoperabilitas](#testing-interoperabilitas)
-6. [Testing Skalabilitas](#testing-skalabilitas)
+4. [Detailed Deployment Steps](#detailed-deployment-steps)
+5. [Interoperability Testing](#interoperability-testing)
+6. [Scalability Testing](#scalability-testing)
 7. [Monitoring & Observability](#monitoring--observability)
 8. [Troubleshooting](#troubleshooting)
 
 ---
 
-## 🏗️ Arsitektur System
+## 🏗️ System Architecture
 
-Sistem Jelita terdiri dari 5 microservices yang independent:
+The Jelita system consists of 5 independent microservices:
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
@@ -25,7 +25,7 @@ Sistem Jelita terdiri dari 5 microservices yang independent:
 ├─────────────────────────────────────────────────────────────┤
 │                                                               │
 │  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐      │
-│  │ Auth Service │  │ Pendaftaran  │  │   Workflow   │      │
+│  │ Auth Service │  │ Application  │  │   Workflow   │      │
 │  │  Port 3001   │  │  Port 3010   │  │  Port 3020   │      │
 │  └──────┬───────┘  └──────┬───────┘  └──────┬───────┘      │
 │         │                  │                  │              │
@@ -54,56 +54,56 @@ Sistem Jelita terdiri dari 5 microservices yang independent:
 ```
 
 ### Services:
-- **Auth Service (3001)**: Autentikasi, JWT token, user management
-- **Pendaftaran Service (3010)**: Submit dan manage permohonan izin
-- **Workflow Service (3020)**: Proses internal (disposisi, kajian teknis)
-- **Survey Service (3030)**: Kelola SKM (Survei Kepuasan Masyarakat)
-- **Archive Service (3040)**: Digital archiving dengan access control OPD
+- **Auth Service (3001)**: Authentication, JWT token, user management
+- **Application Service (3010)**: Submit and manage license applications
+- **Workflow Service (3020)**: Internal processing (disposition, technical assessment)
+- **Survey Service (3030)**: Manage SKM (Public Satisfaction Survey)
+- **Archive Service (3040)**: Digital archiving with OPD access control
 
 ---
 
-## ✅ Prasyarat
+## ✅ Prerequisites
 
-### Software Required:
-- **Docker Desktop** (Windows/Mac) atau Docker Engine (Linux)
+### Required Software:
+- **Docker Desktop** (Windows/Mac) or Docker Engine (Linux)
   - Download: https://www.docker.com/products/docker-desktop
-  - Versi minimal: 20.10+
+  - Minimum version: 20.10+
 - **Docker Compose** v2.0+
-  - Biasanya sudah include di Docker Desktop
-- **Git** (untuk clone/update kode)
-- **Postman** atau **Newman** (untuk testing API)
-- **k6** (optional, untuk load testing)
+  - Usually included in Docker Desktop
+- **Git** (to clone/update code)
+- **Postman** or **Newman** (for API testing)
+- **k6** (optional, for load testing)
 
-### Verifikasi Instalasi:
+### Verify Installation:
 
 ```powershell
-# Cek Docker
+# Check Docker
 docker --version
 # Output: Docker version 24.0.x
 
-# Cek Docker Compose
+# Check Docker Compose
 docker-compose --version
 # Output: Docker Compose version v2.x.x
 
-# Cek k6 (optional)
+# Check k6 (optional)
 k6 version
 ```
 
 ---
 
-## 🚀 Quick Start (5 Menit)
+## 🚀 Quick Start (5 Minutes)
 
-### 1. Build dan Jalankan Semua Services
+### 1. Build and Run All Services
 
 ```powershell
-# Navigasi ke folder prototype
-cd d:\KULIAH\TESIS\prototype
+# Navigate to prototype folder
+cd d:\KULIAH\TESIS\prototype_eng
 
-# Build dan jalankan semua container
+# Build and run all containers
 docker-compose up -d --build
 ```
 
-**Output yang diharapkan:**
+**Expected output:**
 ```
 [+] Building 120.5s (65/65) FINISHED
 [+] Running 7/7
@@ -121,21 +121,21 @@ docker-compose up -d --build
 ### 2. Setup Database Tables & Seed Data
 
 ```powershell
-# Jalankan script setup database
+# Run database setup script
 .\docker\setup-databases.ps1
 ```
 
-### 3. Verifikasi Services Running
+### 3. Verify Services Running
 
 ```powershell
-# Cek status containers
+# Check container status
 docker-compose ps
 
-# Cek logs service tertentu
+# Check logs for specific service
 docker-compose logs auth-service
 docker-compose logs archive-service
 
-# Cek semua logs (follow mode)
+# Check all logs (follow mode)
 docker-compose logs -f
 ```
 
@@ -164,17 +164,17 @@ Buka browser: **http://localhost:8080**
 
 ---
 
-## 📝 Langkah Detail Deployment
+## 📝 Detailed Deployment Steps
 
-### Step 1: Persiapan Environment
+### Step 1: Environment Preparation
 
-Pastikan semua file `.env` di setiap service sudah di-update untuk Docker:
+Ensure all `.env` files in each service are updated for Docker:
 
-**Catatan**: Environment variables sudah di-set di `docker-compose.yml`, tapi jika Anda ingin override, edit file `.env` di masing-masing service folder.
+**Note**: Environment variables are already set in `docker-compose.yml`, but if you want to override, edit the `.env` file in each service folder.
 
 ```env
-# Contoh .env untuk container (sudah ada di docker-compose.yml)
-DB_HOST=mysql          # Bukan localhost!
+# Example .env for container (already in docker-compose.yml)
+DB_HOST=mysql          # Not localhost!
 DB_PORT=3306
 DB_USER=root
 DB_PASSWORD=*******
@@ -184,34 +184,34 @@ JWT_SECRET=FFbdqS6NVE7ARw08MNUAj0+sqXo7ZCEbZF7igEbMUH6tni78oAjzSPqYXvoyP02N
 ### Step 2: Build Images
 
 ```powershell
-# Build semua images tanpa cache (fresh build)
+# Build all images without cache (fresh build)
 docker-compose build --no-cache
 
-# Atau build service tertentu
+# Or build specific service
 docker-compose build auth-service
 ```
 
-### Step 3: Jalankan Stack
+### Step 3: Run Stack
 
 ```powershell
-# Jalankan semua services (detached mode)
+# Run all services (detached mode)
 docker-compose up -d
 
-# Atau jalankan dengan logs visible
+# Or run with visible logs
 docker-compose up
 
-# Jalankan service tertentu saja
+# Run specific services only
 docker-compose up -d mysql auth-service
 ```
 
 ### Step 4: Setup Database Schema
 
-**Opsi A: Menggunakan Script (Recommended)**
+**Option A: Using Script (Recommended)**
 ```powershell
 .\docker\setup-databases.ps1
 ```
 
-**Opsi B: Manual per Service**
+**Option B: Manual per Service**
 ```powershell
 # Auth Service
 docker exec jelita-auth node scripts/setupDatabase.js
@@ -230,29 +230,29 @@ docker exec jelita-survey node scripts/setupDatabase.js
 docker exec jelita-archive node scripts/setupDatabase.js
 ```
 
-### Step 5: Verifikasi Health
+### Step 5: Verify Health
 
 ```powershell
-# Cek health status semua containers
+# Check health status of all containers
 docker-compose ps
 
-# Output yang sehat:
+# Healthy output:
 # NAME              STATUS                    PORTS
 # jelita-auth       Up (healthy)              0.0.0.0:3001->3001/tcp
 # jelita-archive    Up (healthy)              0.0.0.0:3040->3040/tcp
 # ...
 
-# Cek logs untuk errors
+# Check logs for errors
 docker-compose logs --tail=50 auth-service
 ```
 
-### Step 6: Test Konektivitas Antar Service
+### Step 6: Test Inter-Service Connectivity
 
 ```powershell
-# Test dari dalam container (network internal)
+# Test from inside container (internal network)
 docker exec jelita-survey sh -c "wget -qO- http://archive-service:3040/health"
 
-# Test dari host (localhost)
+# Test from host (localhost)
 curl http://localhost:3001/health
 curl http://localhost:3010/health
 curl http://localhost:3020/health
@@ -262,23 +262,23 @@ curl http://localhost:3040/health
 
 ---
 
-## 🧪 Testing Interoperabilitas
+## 🧪 Interoperability Testing
 
-### Tujuan
-Membuktikan bahwa sistem microservices dapat berkomunikasi antar layanan (service-to-service) dan memenuhi alur bisnis end-to-end.
+### Objective
+Prove that the microservices system can communicate between services (service-to-service) and fulfill end-to-end business flows.
 
 ### Test Case 1: End-to-End Flow (Manual via Postman)
 
-**Skenario**: Pemohon submit aplikasi → Workflow proses → Survey → Archive
+**Scenario**: Applicant submits application → Workflow processes → Survey → Archive
 
-1. **Login sebagai Admin**
+1. **Login as Admin**
    ```
    POST http://localhost:3001/api/auth/login
    Body: {"username":"demo","password":"*******"}
    ```
-   Simpan `token` dari response.
+   Save `token` from response.
 
-2. **Submit Permohonan**
+2. **Submit Application**
    ```
    POST http://localhost:3010/api/permohonan
    Headers: Authorization: Bearer {token}
@@ -288,15 +288,15 @@ Membuktikan bahwa sistem microservices dapat berkomunikasi antar layanan (servic
      "lokasi": "Jakarta"
    }
    ```
-   Simpan `permohonan_id`.
+   Save `permohonan_id`.
 
-3. **Trigger Workflow (Simulasi Approval)**
+3. **Trigger Workflow (Approval Simulation)**
    ```
    POST http://localhost:3020/api/workflow/disposisi
    Headers: Authorization: Bearer {token}
    Body: {
      "permohonan_id": {permohonan_id},
-     "catatan": "Disetujui"
+     "catatan": "Approved"
    }
    ```
 
@@ -311,57 +311,57 @@ Membuktikan bahwa sistem microservices dapat berkomunikasi antar layanan (servic
      "triggered_from": "survei"
    }
    ```
-   ✅ **Expected**: Archive Service dipanggil secara internal.
+   ✅ **Expected**: Archive Service called internally.
 
-5. **Verifikasi Archive Created**
+5. **Verify Archive Created**
    ```
    GET http://localhost:3040/api/arsip/1
    Headers: Authorization: Bearer {token}
    ```
-   ✅ **Expected**: Data arsip tersimpan dengan status "pending".
+   ✅ **Expected**: Archive data saved with status "pending".
 
 ### Test Case 2: Automated via Newman
 
 ```powershell
-# Install Newman (jika belum)
+# Install Newman (if not yet installed)
 npm install -g newman
 
-# Jalankan collection Archive Service
+# Run Archive Service collection
 newman run layanan-arsip/postman/Archive_Service.postman_collection.json `
   -e layanan-arsip/postman/Archive_Service.postman_environment.json `
   --reporters cli,json `
   --reporter-json-export reports/interop-test.json
 
-# Cek hasil
+# Check results
 cat reports/interop-test.json
 ```
 
-**Kriteria Sukses Interoperabilitas:**
-- ✅ Semua endpoint return status 200/201
-- ✅ Token JWT valid di semua services
-- ✅ Service-to-service call berhasil (Survey → Archive)
-- ✅ Database entries konsisten (foreign keys, timestamps)
+**Interoperability Success Criteria:**
+- ✅ All endpoints return status 200/201
+- ✅ JWT token valid across all services
+- ✅ Service-to-service call successful (Survey → Archive)
+- ✅ Database entries consistent (foreign keys, timestamps)
 
 ---
 
-## ⚡ Testing Skalabilitas
+## ⚡ Scalability Testing
 
-### Tujuan
-Mengukur kemampuan sistem untuk menangani load tinggi dan scaling horizontal.
+### Objective
+Measure the system's ability to handle high load and horizontal scaling.
 
-### Persiapan Load Testing
+### Load Testing Preparation
 
-**Install k6** (jika belum):
+**Install k6** (if not yet installed):
 ```powershell
 # Windows (via Chocolatey)
 choco install k6
 
-# Atau download dari https://k6.io/docs/get-started/installation/
+# Or download from https://k6.io/docs/get-started/installation/
 ```
 
 ### Test Case 3: Baseline Performance (Light Load)
 
-Buat file `tests/loadtest-baseline.js`:
+Create file `tests/loadtest-baseline.js`:
 
 ```javascript
 import http from 'k6/http';
@@ -395,12 +395,12 @@ export default function() {
 }
 ```
 
-**Jalankan Test:**
+**Run Test:**
 ```powershell
 k6 run tests/loadtest-baseline.js
 ```
 
-**Analisis Output:**
+**Output Analysis:**
 ```
 scenarios: (100.00%) 1 scenario, 10 max VUs, 1m40s max duration
      data_received..................: 1.2 MB 12 kB/s
@@ -410,11 +410,11 @@ scenarios: (100.00%) 1 scenario, 10 max VUs, 1m40s max duration
      http_reqs......................: 600    6/s
 ```
 
-✅ **Baseline Metrics Dicatat**: avg latency, p95, throughput (req/s)
+✅ **Baseline Metrics Recorded**: avg latency, p95, throughput (req/s)
 
 ### Test Case 4: Stress Test (Heavy Load)
 
-Buat file `tests/loadtest-stress.js` dengan options:
+Create file `tests/loadtest-stress.js` with options:
 
 ```javascript
 export let options = {
@@ -431,35 +431,35 @@ export let options = {
 };
 ```
 
-**Jalankan:**
+**Run:**
 ```powershell
 k6 run tests/loadtest-stress.js
 ```
 
-**Observasi:**
-- Apakah latency meningkat linear atau eksponensial?
-- Pada titik mana error rate mulai naik?
-- CPU/Memory usage container (lihat `docker stats`)
+**Observations:**
+- Does latency increase linearly or exponentially?
+- At what point does error rate start to rise?
+- CPU/Memory usage of containers (see `docker stats`)
 
-### Test Case 5: Scaling Horizontal (Multiple Instances)
+### Test Case 5: Horizontal Scaling (Multiple Instances)
 
-**Scale Auth Service ke 3 instances:**
+**Scale Auth Service to 3 instances:**
 
 ```powershell
-# Edit docker-compose.yml (tambahkan deploy section atau gunakan --scale)
+# Edit docker-compose.yml (add deploy section or use --scale)
 docker-compose up -d --scale auth-service=3
 
-# Verifikasi
+# Verify
 docker-compose ps auth-service
 ```
 
-**⚠️ Catatan**: Untuk load balancing, Anda perlu tambahkan **nginx** atau **Traefik** sebagai reverse proxy. Contoh sederhana dengan nginx:
+**⚠️ Note**: For load balancing, you need to add **nginx** or **Traefik** as a reverse proxy. Simple nginx example:
 
-Buat `docker/nginx.conf`:
+Create `docker/nginx.conf`:
 ```nginx
 upstream auth_backend {
     server auth-service:3001;
-    # Jika scale, Docker Compose DNS round-robin otomatis
+    # If scaled, Docker Compose DNS round-robin automatic
 }
 
 server {
@@ -470,7 +470,7 @@ server {
 }
 ```
 
-Tambahkan di `docker-compose.yml`:
+Add in `docker-compose.yml`:
 ```yaml
 nginx:
   image: nginx:alpine
@@ -484,38 +484,38 @@ nginx:
     - jelita-network
 ```
 
-**Jalankan load test lagi** dan bandingkan:
-- Throughput meningkat?
-- Latency p95 turun?
-- Error rate tetap rendah?
+**Run load test again** and compare:
+- Throughput increased?
+- p95 latency decreased?
+- Error rate stays low?
 
 ### Test Case 6: Database Bottleneck
 
-Jika performa buruk, cek MySQL:
+If performance is poor, check MySQL:
 
 ```powershell
-# Masuk ke MySQL container
+# Enter MySQL container
 docker exec -it jelita-mysql mysql -uroot -pEnter*123
 
-# Cek slow queries
+# Check slow queries
 SHOW VARIABLES LIKE 'slow_query_log';
 SET GLOBAL slow_query_log = 'ON';
 SET GLOBAL long_query_time = 1;
 
-# Lihat process list
+# View process list
 SHOW FULL PROCESSLIST;
 ```
 
-**Solusi**:
-- Tambahkan indexing di kolom yang sering di-query
-- Gunakan connection pooling (sudah ada di Sequelize)
+**Solutions**:
+- Add indexing on frequently queried columns
+- Use connection pooling (already in Sequelize)
 - Scale MySQL (read replicas, sharding)
 
 ---
 
 ## 📊 Monitoring & Observability
 
-### Quick Metrics dengan Docker Stats
+### Quick Metrics with Docker Stats
 
 ```powershell
 # Real-time resource usage
@@ -529,7 +529,7 @@ docker stats
 
 ### Setup Prometheus + Grafana (Advanced)
 
-Buat `docker-compose.observability.yml`:
+Create `docker-compose.observability.yml`:
 
 ```yaml
 version: '3.8'
@@ -567,7 +567,7 @@ networks:
     external: true
 ```
 
-Buat `docker/prometheus.yml`:
+Create `docker/prometheus.yml`:
 ```yaml
 scrape_configs:
   - job_name: 'nodejs-services'
@@ -580,11 +580,11 @@ scrape_configs:
         - 'archive-service:3040'
 ```
 
-**Jalankan**:
+**Run**:
 ```powershell
 docker-compose -f docker-compose.observability.yml up -d
 
-# Akses Grafana: http://localhost:3000
+# Access Grafana: http://localhost:3000
 # Login: admin / admin
 ```
 
@@ -592,23 +592,23 @@ docker-compose -f docker-compose.observability.yml up -d
 
 ## 🛠️ Troubleshooting
 
-### Problem 1: Container Tidak Start
+### Problem 1: Container Won't Start
 
 ```powershell
-# Cek logs
+# Check logs
 docker-compose logs auth-service
 
 # Common issues:
-# - Port sudah digunakan → ubah port mapping
-# - Database belum ready → tunggu healthcheck
+# - Port already in use → change port mapping
+# - Database not ready → wait for healthcheck
 ```
 
-**Solusi**:
+**Solution**:
 ```powershell
-# Stop semua
+# Stop all
 docker-compose down
 
-# Hapus volume (reset DB)
+# Remove volumes (reset DB)
 docker-compose down -v
 
 # Restart
@@ -619,47 +619,47 @@ docker-compose up -d --build
 
 **Error**: `ECONNREFUSED mysql:3306`
 
-**Solusi**:
+**Solution**:
 ```powershell
-# Pastikan MySQL healthy
+# Ensure MySQL is healthy
 docker-compose ps mysql
 
-# Tunggu beberapa detik untuk healthcheck
+# Wait a few seconds for healthcheck
 timeout 30
 
-# Restart service yang error
+# Restart failed service
 docker-compose restart auth-service
 ```
 
-### Problem 3: Service Cannot Communicate
+### Problem 3: Services Cannot Communicate
 
 **Error**: `getaddrinfo ENOTFOUND archive-service`
 
 **Debugging**:
 ```powershell
-# Exec ke container
+# Exec into container
 docker exec -it jelita-survey sh
 
-# Ping service lain
+# Ping other service
 ping archive-service
 
-# Cek DNS resolution
+# Check DNS resolution
 nslookup archive-service
 ```
 
-**Solusi**: Pastikan semua container di network yang sama (`jelita-network`).
+**Solution**: Ensure all containers are on the same network (`jelita-network`).
 
 ### Problem 4: High Memory Usage
 
 ```powershell
-# Lihat usage detail
+# View detailed usage
 docker stats --no-stream
 
-# Jika MySQL terlalu besar
+# If MySQL is too large
 docker exec jelita-mysql mysql -uroot -pEnter*123 -e "SHOW ENGINE INNODB STATUS\G" | grep "Buffer pool size"
 ```
 
-**Solusi**: Set resource limits di `docker-compose.yml`:
+**Solution**: Set resource limits in `docker-compose.yml`:
 ```yaml
 services:
   mysql:
@@ -674,82 +674,82 @@ services:
 
 ## 🔐 Security Best Practices (Production)
 
-1. **Jangan hardcode credentials**:
+1. **Don't hardcode credentials**:
    ```powershell
-   # Gunakan Docker secrets atau .env file
+   # Use Docker secrets or .env file
    docker secret create mysql_root_password -
    ```
 
-2. **Gunakan non-root user** di Dockerfile:
+2. **Use non-root user** in Dockerfile:
    ```dockerfile
    RUN addgroup -S appgroup && adduser -S appuser -G appgroup
    USER appuser
    ```
 
-3. **Scan images untuk vulnerabilities**:
+3. **Scan images for vulnerabilities**:
    ```powershell
    docker scan jelita-auth:latest
    ```
 
 ---
 
-## 📈 Kriteria Keberhasilan Testing
+## 📈 Testing Success Criteria
 
-### Interoperabilitas ✅
-- [ ] Semua 5 services dapat berkomunikasi via Docker network
-- [ ] JWT token valid di semua services
-- [ ] End-to-end flow berhasil (Submit → Workflow → Survey → Archive)
-- [ ] Service-to-service internal calls berhasil (tanpa token)
-- [ ] Database foreign key relationships konsisten
+### Interoperability ✅
+- [ ] All 5 services can communicate via Docker network
+- [ ] JWT token valid across all services
+- [ ] End-to-end flow successful (Submit → Workflow → Survey → Archive)
+- [ ] Service-to-service internal calls successful (without token)
+- [ ] Database foreign key relationships consistent
 
-### Skalabilitas ✅
+### Scalability ✅
 - [ ] Baseline: 10 VUs → avg latency < 100ms, p95 < 500ms
 - [ ] Stress: 200 VUs → p95 < 2s, error rate < 5%
-- [ ] Horizontal scaling: 3 instances → throughput meningkat 2-3x
-- [ ] Database tidak menjadi bottleneck (connection pool optimal)
-- [ ] Memory/CPU usage stabil di bawah load
+- [ ] Horizontal scaling: 3 instances → throughput increases 2-3x
+- [ ] Database not a bottleneck (optimal connection pool)
+- [ ] Memory/CPU usage stable under load
 
 ### Resilience ✅
-- [ ] Service restart otomatis jika crash (restart: unless-stopped)
-- [ ] Healthcheck deteksi service unhealthy dan restart
-- [ ] Idempotency: duplicate request tidak duplikasi data
-- [ ] Timeout dan retry mechanism berfungsi
-- [ ] Graceful degradation saat satu service down
+- [ ] Service auto-restarts if crashed (restart: unless-stopped)
+- [ ] Healthcheck detects unhealthy service and restarts
+- [ ] Idempotency: duplicate requests don't duplicate data
+- [ ] Timeout and retry mechanism functioning
+- [ ] Graceful degradation when one service is down
 
 ---
 
-## 📚 Referensi & Next Steps
+## 📚 References & Next Steps
 
-### Dokumentasi Terkait:
+### Related Documentation:
 - `layanan-arsip/postman/QUICK_START.md` - Testing Archive Service
 - `layanan-survei/TESTING_GUIDE.md` - Testing Survey Service
 - Individual service `README.md` files
 
 ### Advanced Topics:
-- **Kubernetes Deployment** - Untuk production scale
-- **CI/CD Pipeline** - GitHub Actions untuk auto deploy
+- **Kubernetes Deployment** - For production scale
+- **CI/CD Pipeline** - GitHub Actions for auto deploy
 - **Distributed Tracing** - OpenTelemetry + Jaeger
-- **API Gateway** - Kong/Traefik untuk centralized routing
+- **API Gateway** - Kong/Traefik for centralized routing
 
-### Perintah Berguna:
+### Useful Commands:
 
 ```powershell
-# Start semua
+# Start all
 docker-compose up -d
 
-# Stop semua
+# Stop all
 docker-compose down
 
-# Rebuild semua
+# Rebuild all
 docker-compose up -d --build --force-recreate
 
-# Lihat logs semua services
+# View logs of all services
 docker-compose logs -f
 
-# Hapus semua (termasuk volumes)
+# Remove all (including volumes)
 docker-compose down -v
 
-# Exec ke container
+# Exec into container
 docker exec -it jelita-auth sh
 
 # Scale service
@@ -758,12 +758,12 @@ docker-compose up -d --scale auth-service=3
 
 ---
 
-## 👨‍💻 Kontributor & Support
+## 👨‍💻 Contributors & Support
 
-Dibuat untuk Tesis: **Transformasi Sistem Monolith ke Microservices**
+Created for Thesis: **Transforming Monolith System to Microservices**
 
-Pertanyaan atau issues? Buka issue di repository atau hubungi maintainer.
+Questions or issues? Open an issue in the repository or contact the maintainer.
 
 ---
 
-**Selamat Testing! 🚀**
+**Happy Testing! 🚀**
