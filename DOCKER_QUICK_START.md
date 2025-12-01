@@ -206,4 +206,3 @@ docker-compose ps
 
 ---
 
-**Happy Testing! 🚀**
