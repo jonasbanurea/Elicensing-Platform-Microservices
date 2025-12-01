@@ -83,7 +83,7 @@ Then in Postman:
 ## 📋 Endpoint Summary
 
 | # | Endpoint | Method | Auth | Role | Description |
-|---|----------|--------|------|------|-----------||
+|---|----------|--------|------|------|-------------|
 | 1 | `/api/permohonan` | POST | ✓ | Any | Create new application |
 | 2 | `/api/permohonan/:id` | PUT | ✓ | Owner/Admin/OPD | Update application data |
 | 3 | `/api/permohonan/:id/dokumen` | POST | ✓ | Owner | Upload document (max 5MB) |
