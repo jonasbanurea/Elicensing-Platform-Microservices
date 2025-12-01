@@ -593,6 +593,4 @@ Survey (SKM) Service is **READY TO USE**!
 
 ---
 
-**Happy Testing! 🚀**
-
 For detailed instructions, see `postman/TESTING_GUIDE.md`
