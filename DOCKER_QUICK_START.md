@@ -88,7 +88,7 @@ choco install k6
 # Baseline test (10 VUs)
 k6 run tests/loadtest-baseline.js
 
-# Stress test (200+ VUs)
+# Stress test (300 VUs)
 k6 run tests/loadtest-stress.js
 
 # End-to-end integration
