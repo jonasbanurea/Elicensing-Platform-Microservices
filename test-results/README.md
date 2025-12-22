@@ -8,6 +8,8 @@ This directory contains raw test data and artifacts from comprehensive testing v
 - **`metrics.zip`** - Compressed CSV metrics from k6 tests (~1-34 MB per file)
 - **`summary.txt`** - Test execution summary with key metrics
 - **`failures.txt`** - Failure details (if any occurred)
+- **`data-exchange-results.json`** - Interoperability test results (API contracts, data formats)
+- **`data-exchange-summary.txt`** - Human-readable interoperability summary
 - **Test metadata** - Configuration and timestamps
 
 ### ❌ Excluded Files (Gitignored)

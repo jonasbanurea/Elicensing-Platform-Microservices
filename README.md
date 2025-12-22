@@ -613,6 +613,12 @@ prototype_eng V2/
 - **[SCALE_OUT_TEST_GUIDE.md](docs/testing/SCALE_OUT_TEST_GUIDE.md)** - Horizontal scaling deployment & validation
 - **[INTEROPERABILITY_TESTING_GUIDE.md](docs/testing/INTEROPERABILITY_TESTING_GUIDE.md)** - Interoperability test framework & scenarios
 
+### Automation Scripts
+- **[scripts/README.md](scripts/README.md)** - Testing and utility scripts (PowerShell)
+  - `run-interoperability-tests.ps1` - Full interoperability test suite
+  - `run-scaleout-test.ps1` - Horizontal scaling validation
+  - `submit-to-github.ps1` - Automated GitHub push workflow
+
 ### Deployment Guides
 - **[Documentation Index](docs/README.md)** - Complete documentation hub with setup, testing, and reports
 - **[SETUP_COMPLETE_DOCKER.md](docs/setup/SETUP_COMPLETE_DOCKER.md)** - Post-deployment verification checklist
