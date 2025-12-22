@@ -156,6 +156,110 @@ Non-sequential callback delivery to test state machine robustness.
 
 **Overall Data Exchange Success Rate:** 98-100%
 
+### 2.3.1 External Interoperability Data Exchange Sequence
+
+The following diagram illustrates the complete data exchange flow with external government platforms (OSS-RBA/SPBE), highlighting key interoperability patterns reviewers evaluate for compliance and production readiness.
+
+```mermaid
+sequenceDiagram
+    participant Client as Client Application
+    participant Gateway as API Gateway<br/>(TS3 - Trust Boundary)
+    participant OSS_Adapter as OSS Adapter<br/>(Internal)
+    participant Workflow as Workflow Service
+    participant Archive as Archive Service
+    participant OSS_Emulator as Mock OSS-RBA<br/>(Sandbox Emulator)
+    
+    Note over Client,OSS_Emulator: Phase 1: Outbound Submission (Sync)
+    
+    Client->>Gateway: POST /api/v1/permohonan<br/>[Authorization: Bearer JWT]
+    Note right of Client: correlation-id: corr-xxx<br/>idempotency-key: idem-xxx
+    
+    Gateway->>Gateway: Validate JWT & Idempotency
+    Note right of Gateway: Check duplicate requests<br/>via idempotency-key
+    
+    Gateway->>OSS_Adapter: Forward with headers
+    Note right of Gateway: Propagate correlation-id<br/>Add X-Request-ID
+    
+    OSS_Adapter->>OSS_Emulator: POST /oss/api/permohonan<br/>[Mapped to OSS schema]
+    Note right of OSS_Adapter: Retry: 3 attempts<br/>Backoff: exponential (1s, 2s, 4s)
+    
+    alt Success Response
+        OSS_Emulator-->>OSS_Adapter: 200 OK + application_id
+        OSS_Adapter-->>Gateway: Success + tracking_id
+        Gateway-->>Client: 201 Created + permohonan_id
+    else Failure (Retriable)
+        OSS_Emulator-->>OSS_Adapter: 503 Service Unavailable
+        OSS_Adapter->>OSS_Adapter: Wait + Retry (backoff)
+        Note left of OSS_Adapter: Max 3 retries
+        OSS_Adapter->>OSS_Emulator: Retry POST
+    else Failure (Non-Retriable)
+        OSS_Emulator-->>OSS_Adapter: 400 Bad Request
+        OSS_Adapter-->>Gateway: Error + details
+        Gateway-->>Client: 422 Unprocessable Entity
+    end
+    
+    Note over Client,OSS_Emulator: Phase 2: Inbound Callback (Async)
+    
+    OSS_Emulator->>Gateway: POST /api/webhooks/oss/status-update<br/>[signature verification]
+    Note left of OSS_Emulator: callback_id: cb-xxx<br/>application_id: OSS-20250001<br/>status: APPROVED/REJECTED
+    
+    Gateway->>Gateway: Verify webhook signature
+    Note right of Gateway: HMAC-SHA256<br/>X-OSS-Signature header
+    
+    Gateway->>Workflow: Update application status<br/>[correlation-id preserved]
+    Note right of Gateway: Map: OSS-20250001 → PRM-2025-001
+    
+    Workflow->>Workflow: State transition validation
+    Note right of Workflow: Ensure valid state change<br/>MENUNGGU_APPROVAL → DISETUJUI
+    
+    Workflow->>Archive: Archive approval document
+    Note right of Workflow: Trigger async archival
+    
+    Archive-->>Workflow: Document archived
+    Workflow-->>Gateway: Status updated
+    Gateway-->>OSS_Emulator: 200 OK (acknowledge)
+    
+    Note over Client,OSS_Emulator: Key Interoperability Controls
+    Note over Gateway: • Idempotency: Duplicate detection via idempotency-key<br/>• Traceability: correlation-id propagated end-to-end<br/>• Resilience: Exponential backoff + circuit breaker<br/>• Security: JWT auth + webhook signature verification<br/>• SPBE Compliance: Audit logs at every boundary crossing
+```
+
+**Diagram Key:**
+
+**Trust Boundaries:**
+- **TS3 (API Gateway):** Primary security perimeter; validates all inbound requests (JWT authentication) and outbound webhooks (signature verification)
+
+**Critical Interoperability Patterns:**
+
+1. **Idempotency Control:**
+   - Client sends `idempotency-key` header with each request
+   - Gateway checks for duplicate keys within 24-hour window
+   - Prevents duplicate submissions to external platform (OSS)
+   - Returns cached response for duplicate keys (HTTP 200 with existing resource)
+
+2. **Correlation Tracing:**
+   - `correlation-id` generated at gateway entry point
+   - Propagated through all internal services and external calls
+   - Enables end-to-end transaction tracking across 8+ service invocations
+   - Recorded in audit logs for SPBE compliance verification
+
+3. **Retry & Backoff Strategy:**
+   - Exponential backoff: 1s → 2s → 4s between retries
+   - Retries only for transient failures (5xx errors, network timeouts)
+   - Circuit breaker opens after 5 consecutive failures (prevents cascade)
+   - Maximum 3 retry attempts before returning error to client
+
+4. **Webhook Security:**
+   - OSS emulator signs callback payloads with HMAC-SHA256
+   - Gateway verifies `X-OSS-Signature` header before processing
+   - Timestamp validation prevents replay attacks (±5 minute window)
+   - Invalid signatures rejected with HTTP 401
+
+**Mock vs. Production OSS:**
+- Diagram shows **Mock OSS-RBA (Sandbox Emulator)** for controlled testing
+- Production deployment requires real OSS Sandbox credentials from BKPM
+- Emulator faithfully reproduces OSS callback patterns and error scenarios
+- Response delays and failure injection configurable for resilience testing
+
 ### 2.4 Data Integrity Verification
 
 Three critical data integrity dimensions were validated:
