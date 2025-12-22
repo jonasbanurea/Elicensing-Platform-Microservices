@@ -9,6 +9,7 @@ const Dokumen = require('../models/Dokumen');
 const { validateToken, requireRole } = require('../middleware/authMiddleware');
 
 const router = express.Router();
+const ARSIP_SERVICE_URL = process.env.ARSIP_SERVICE_URL || 'http://archive-service:3040';
 
 // Setup multer for file uploads
 const storage = multer.diskStorage({
@@ -43,6 +44,57 @@ const upload = multer({
   }
 });
 
+// OSS webhook callback to update status and trigger archiving (no auth, called by OSS mock)
+router.post('/api/webhooks/oss/status-update', async (req, res) => {
+  try {
+    const { permohonan_id, reference_id, status, approval_number, metadata } = req.body || {};
+    const targetId = permohonan_id || reference_id; // accept either field
+
+    if (!targetId) {
+      return res.status(400).json({ success: false, message: 'permohonan_id or reference_id is required' });
+    }
+
+    const permohonan = await Permohonan.findByPk(targetId);
+    if (!permohonan) {
+      return res.status(404).json({ success: false, message: 'Permohonan not found' });
+    }
+
+    const newStatus = status || 'DISETUJUI';
+    const nomor_registrasi = permohonan.nomor_registrasi || approval_number || `REG-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+
+    await permohonan.update({
+      status: newStatus,
+      nomor_registrasi,
+      updated_at: new Date()
+    });
+
+    // Trigger archiving asynchronously; do not fail callback if archive fails
+    try {
+      await axios.post(`${ARSIP_SERVICE_URL}/api/internal/arsipkan-dokumen`, {
+        permohonan_id: permohonan.id,
+        nomor_registrasi,
+        triggered_from: 'oss-callback',
+        metadata: metadata || {}
+      }, { timeout: 5000 });
+    } catch (archiveErr) {
+      console.warn('Archive trigger failed', archiveErr.message);
+    }
+
+    res.status(200).json({
+      success: true,
+      message: 'Callback processed',
+      data: {
+        permohonan_id: permohonan.id,
+        status: newStatus,
+        nomor_registrasi
+      }
+    });
+  } catch (error) {
+    console.error('OSS callback handler error:', error);
+    res.status(500).json({ success: false, message: 'Failed to process callback', error: error.message });
+  }
+});
+
 // 1. Create a new application
 router.post('/api/permohonan', validateToken, async (req, res) => {
   try {
@@ -58,14 +110,40 @@ router.post('/api/permohonan', validateToken, async (req, res) => {
     });
 
     res.status(201).json({
+      success: true,
       message: 'Permohonan created successfully',
       data: newPermohonan
     });
   } catch (error) {
     res.status(500).json({ 
+      success: false,
       message: 'Failed to create application', 
       error: error.message 
     });
+  }
+});
+
+// List applications with optional status + limit
+router.get('/api/permohonan', validateToken, async (req, res) => {
+  try {
+    const { status, limit } = req.query;
+    const where = {};
+    if (status) where.status = status;
+
+    // Non-admin users only see their own records
+    if (!['Admin', 'OPD', 'Pimpinan'].includes(req.user.role)) {
+      where.user_id = req.user.id;
+    }
+
+    const records = await Permohonan.findAll({
+      where,
+      limit: limit ? parseInt(limit, 10) : 20,
+      order: [['created_at', 'DESC']],
+    });
+
+    res.status(200).json({ success: true, message: 'Permohonan list', data: records });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Failed to fetch permohonan', error: error.message });
   }
 });
 
@@ -92,14 +170,65 @@ router.put('/api/permohonan/:id', validateToken, async (req, res) => {
     });
 
     res.status(200).json({
+      success: true,
       message: 'Permohonan updated successfully',
       data: permohonan
     });
   } catch (error) {
     res.status(500).json({ 
+      success: false,
       message: 'Failed to update application', 
       error: error.message 
     });
+  }
+});
+
+// Get application detail
+router.get('/api/permohonan/:id', validateToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const permohonan = await Permohonan.findByPk(id);
+    if (!permohonan) return res.status(404).json({ success: false, message: 'Application not found' });
+
+    if (permohonan.user_id !== req.user.id && !['Admin', 'OPD', 'Pimpinan'].includes(req.user.role)) {
+      return res.status(403).json({ success: false, message: 'Access denied' });
+    }
+
+    res.status(200).json({ success: true, message: 'Permohonan detail', data: permohonan });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Failed to fetch detail', error: error.message });
+  }
+});
+
+// Submit application (moves draft -> submitted)
+router.post('/api/permohonan/:id/submit', validateToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const permohonan = await Permohonan.findByPk(id);
+    if (!permohonan) return res.status(404).json({ success: false, message: 'Application not found' });
+    if (permohonan.user_id !== req.user.id && !['Admin', 'OPD'].includes(req.user.role)) {
+      return res.status(403).json({ success: false, message: 'Access denied' });
+    }
+
+    await permohonan.update({ status: 'submitted', updated_at: new Date() });
+    res.status(200).json({ success: true, message: 'Permohonan submitted', data: permohonan });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Failed to submit permohonan', error: error.message });
+  }
+});
+
+// Update status (admin-only for approvals)
+router.put('/api/permohonan/:id/status', validateToken, requireRole(['Admin', 'OPD', 'Pimpinan']), async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+    const permohonan = await Permohonan.findByPk(id);
+    if (!permohonan) return res.status(404).json({ success: false, message: 'Application not found' });
+
+    await permohonan.update({ status: status || permohonan.status, updated_at: new Date() });
+    res.status(200).json({ success: true, message: 'Permohonan status updated', data: permohonan });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Failed to update status', error: error.message });
   }
 });
 
@@ -109,7 +238,7 @@ router.get('/api/permohonan/:id/status', validateToken, async (req, res) => {
     const { id } = req.params;
 
     const permohonan = await Permohonan.findByPk(id, {
-      attributes: ['id', 'nomor_registrasi', 'status', 'created_at', 'updated_at'],
+      attributes: ['id', 'user_id', 'nomor_registrasi', 'status', 'created_at', 'updated_at'],
     });
 
     if (!permohonan) {

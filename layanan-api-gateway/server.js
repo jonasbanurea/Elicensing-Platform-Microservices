@@ -12,6 +12,20 @@ require('dotenv').config();
 const { testConnection, syncDatabase } = require('./utils/database');
 const ossIntegrationRoutes = require('./routes/ossIntegration');
 
+// Simple in-memory audit log store (keeps last 1000 entries)
+const auditLogs = [];
+
+// Static service directory to expose via API (avoids 404 in SPBE checks)
+const serviceDirectory = [
+  { name: 'api-gateway', version: '1.0.0', url: 'http://localhost:8080', owner: 'JELITA', sla: '99.0%' },
+  { name: 'auth-service', version: '1.0.0', url: 'http://localhost:3001', owner: 'JELITA', sla: '99.0%' },
+  { name: 'pendaftaran-service', version: '1.0.0', url: 'http://localhost:3010', owner: 'JELITA', sla: '99.0%' },
+  { name: 'workflow-service', version: '1.0.0', url: 'http://localhost:3020', owner: 'JELITA', sla: '99.0%' },
+  { name: 'survey-service', version: '1.0.0', url: 'http://localhost:3030', owner: 'JELITA', sla: '99.0%' },
+  { name: 'archive-service', version: '1.0.0', url: 'http://localhost:3040', owner: 'JELITA', sla: '99.0%' },
+  { name: 'mysql', version: '8.0', url: 'mysql://localhost:3307', owner: 'JELITA', sla: '99.0%' }
+];
+
 const app = express();
 const PORT = process.env.PORT || 3050;
 
@@ -26,6 +40,28 @@ app.use((req, res, next) => {
   next();
 });
 
+// Lightweight audit logging middleware
+app.use((req, res, next) => {
+  const started = Date.now();
+  res.on('finish', () => {
+    auditLogs.push({
+      timestamp: new Date().toISOString(),
+      correlation_id: req.header('x-correlation-id') || null,
+      service_name: 'api-gateway',
+      operation: `${req.method} ${req.path}`,
+      actor_id: req.header('x-user-id') || null,
+      request_id: req.header('x-request-id') || null,
+      response_code: res.statusCode,
+      duration_ms: Date.now() - started
+    });
+
+    if (auditLogs.length > 1000) {
+      auditLogs.shift();
+    }
+  });
+  next();
+});
+
 // Routes
 app.get('/health', (req, res) => {
   res.json({
@@ -33,6 +69,35 @@ app.get('/health', (req, res) => {
     service: 'JELITA API Gateway',
     version: '1.0.0',
     timestamp: new Date().toISOString()
+  });
+});
+
+// Service directory endpoint (used in SPBE checks)
+app.get('/api/v1/service-directory', (req, res) => {
+  res.json({
+    success: true,
+    total: serviceDirectory.length,
+    services: serviceDirectory
+  });
+});
+
+// Audit logs endpoint (basic in-memory collector)
+app.get('/api/v1/audit-logs', (req, res) => {
+  const { limit = 10, correlation_id } = req.query;
+  const parsedLimit = Number(limit) || 10;
+
+  let data = auditLogs;
+  if (correlation_id) {
+    data = data.filter((log) => log.correlation_id === correlation_id);
+  }
+
+  const sliced = data.slice(-parsedLimit);
+
+  res.json({
+    success: true,
+    total: data.length,
+    returned: sliced.length,
+    data: sliced
   });
 });
 

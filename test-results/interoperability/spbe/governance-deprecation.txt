@@ -1,0 +1,10 @@
+﻿HTTP/1.1 200 OK
+Server: nginx/1.25.5
+Date: Mon, 22 Dec 2025 04:32:05 GMT
+Content-Type: application/json
+Content-Length: 83
+Connection: keep-alive
+Deprecation: true
+Sunset: Sat, 21 Jun 2026 00:00:00 GMT
+Link: <https://docs.jelita.go.id/migration/v2>; rel="sunset"
+

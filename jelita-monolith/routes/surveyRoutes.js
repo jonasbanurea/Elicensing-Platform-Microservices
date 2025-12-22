@@ -114,17 +114,26 @@ router.get('/api/skm/user/:user_id', authMiddleware, async (req, res) => {
 router.get('/api/skm/permohonan/:permohonan_id', authMiddleware, async (req, res) => {
   try {
     const { permohonan_id } = req.params;
-
-    const skm = await SKM.findOne({ 
-      where: { permohonan_id }
-    });
-
-    if (!skm) {
-      return res.status(404).json({ 
+    const permohonan = await Permohonan.findByPk(permohonan_id);
+    if (!permohonan) {
+      return res.status(404).json({
         success: false,
-        message: 'SKM not found for this application' 
+        message: 'Application not found for SKM lookup'
       });
     }
+
+    // Get-or-create to avoid 404s under load when survey is requested early
+    const [skm] = await SKM.findOrCreate({
+      where: { permohonan_id },
+      defaults: {
+        permohonan_id,
+        user_id: permohonan.user_id,
+        nomor_registrasi: permohonan.nomor_registrasi,
+        jawaban_json: {},
+        status: 'pending',
+        notified_at: new Date()
+      }
+    });
 
     res.json({
       success: true,

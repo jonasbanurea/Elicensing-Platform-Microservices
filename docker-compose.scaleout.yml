@@ -1,0 +1,342 @@
+# Docker Compose Scale-Out Configuration
+# Horizontal scaling untuk Permohonan & Workflow services (bottleneck utama)
+# Run: docker compose -f docker-compose.scaleout.yml up -d
+
+services:
+  # MySQL Database (shared untuk semua services)
+  mysql:
+    image: mysql:8.0
+    container_name: jelita-mysql-scaled
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: JelitaMySQL2024
+      MYSQL_CHARACTER_SET_SERVER: utf8mb4
+      MYSQL_COLLATION_SERVER: utf8mb4_unicode_ci
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql_data_scaled:/var/lib/mysql
+      - ./docker/init-db:/docker-entrypoint-initdb.d
+    networks:
+      - jelita-network-scaled
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-pJelitaMySQL2024"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    # Increase max connections for scaled services
+    command: --max_connections=500 --innodb_buffer_pool_size=512M
+
+  # phpMyAdmin
+  phpmyadmin:
+    image: phpmyadmin:latest
+    container_name: jelita-phpmyadmin-scaled
+    restart: unless-stopped
+    environment:
+      PMA_HOST: mysql
+      PMA_PORT: 3306
+      PMA_USER: root
+      PMA_PASSWORD: JelitaMySQL2024
+    ports:
+      - "8081:80"
+    depends_on:
+      - mysql
+    networks:
+      - jelita-network-scaled
+
+  # Nginx API Gateway dengan Load Balancing
+  api-gateway:
+    image: nginx:1.25-alpine
+    container_name: jelita-gateway-scaled
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+    ports:
+      - "8080:80"
+    volumes:
+      - ./docker/nginx/api-gateway-scaleout.conf:/etc/nginx/conf.d/default.conf:ro
+    networks:
+      - jelita-network-scaled
+
+  # Auth Service (single instance - tidak bottleneck)
+  auth-service:
+    build:
+      context: ./layanan-manajemen-pengguna
+      dockerfile: Dockerfile
+    container_name: jelita-auth-scaled
+    restart: unless-stopped
+    environment:
+      PORT: 3001
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_USER: root
+      DB_PASSWORD: JelitaMySQL2024
+      DB_NAME: jelita_users
+      JWT_SECRET: FFbdqS6NVE7ARw08MNUAj0sqXo7ZCEbZF7igEbMUH6tni78oSecretKeyAjzSPqYXvoyP02N
+      NODE_ENV: production
+      DB_CONNECTION_LIMIT: 30  # Increased from default 10
+    ports:
+      - "3001:3001"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - jelita-network-scaled
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Pendaftaran Service - SCALED TO 3 REPLICAS (Bottleneck #1)
+  pendaftaran-service-1:
+    build:
+      context: ./layanan-pendaftaran
+      dockerfile: Dockerfile
+    container_name: jelita-pendaftaran-1
+    restart: unless-stopped
+    environment:
+      PORT: 3010
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_USER: root
+      DB_PASSWORD: JelitaMySQL2024
+      DB_NAME: jelita_pendaftaran
+      JWT_SECRET: FFbdqS6NVE7ARw08MNUAj0sqXo7ZCEbZF7igEbMUH6tni78oSecretKeyAjzSPqYXvoyP02N
+      AUTH_SERVICE_URL: http://auth-service:3001
+      NODE_ENV: production
+      DB_CONNECTION_LIMIT: 30  # Increased connection pool
+      INSTANCE_ID: replica-1
+    depends_on:
+      mysql:
+        condition: service_healthy
+      auth-service:
+        condition: service_healthy
+    networks:
+      - jelita-network-scaled
+
+  pendaftaran-service-2:
+    build:
+      context: ./layanan-pendaftaran
+      dockerfile: Dockerfile
+    container_name: jelita-pendaftaran-2
+    restart: unless-stopped
+    environment:
+      PORT: 3010
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_USER: root
+      DB_PASSWORD: JelitaMySQL2024
+      DB_NAME: jelita_pendaftaran
+      JWT_SECRET: FFbdqS6NVE7ARw08MNUAj0sqXo7ZCEbZF7igEbMUH6tni78oSecretKeyAjzSPqYXvoyP02N
+      AUTH_SERVICE_URL: http://auth-service:3001
+      NODE_ENV: production
+      DB_CONNECTION_LIMIT: 30
+      INSTANCE_ID: replica-2
+    depends_on:
+      mysql:
+        condition: service_healthy
+      auth-service:
+        condition: service_healthy
+    networks:
+      - jelita-network-scaled
+
+  pendaftaran-service-3:
+    build:
+      context: ./layanan-pendaftaran
+      dockerfile: Dockerfile
+    container_name: jelita-pendaftaran-3
+    restart: unless-stopped
+    environment:
+      PORT: 3010
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_USER: root
+      DB_PASSWORD: JelitaMySQL2024
+      DB_NAME: jelita_pendaftaran
+      JWT_SECRET: FFbdqS6NVE7ARw08MNUAj0sqXo7ZCEbZF7igEbMUH6tni78oSecretKeyAjzSPqYXvoyP02N
+      AUTH_SERVICE_URL: http://auth-service:3001
+      NODE_ENV: production
+      DB_CONNECTION_LIMIT: 30
+      INSTANCE_ID: replica-3
+    depends_on:
+      mysql:
+        condition: service_healthy
+      auth-service:
+        condition: service_healthy
+    networks:
+      - jelita-network-scaled
+
+  # Workflow Service - SCALED TO 3 REPLICAS (Bottleneck #2)
+  workflow-service-1:
+    build:
+      context: ./layanan-alur-kerja
+      dockerfile: Dockerfile
+    container_name: jelita-workflow-1
+    restart: unless-stopped
+    environment:
+      PORT: 3020
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_USER: root
+      DB_PASSWORD: JelitaMySQL2024
+      DB_NAME: jelita_workflow
+      JWT_SECRET: FFbdqS6NVE7ARw08MNUAj0sqXo7ZCEbZF7igEbMUH6tni78oSecretKeyAjzSPqYXvoyP02N
+      AUTH_SERVICE_URL: http://auth-service:3001
+      PENDAFTARAN_SERVICE_URL: http://api-gateway  # Use gateway for load-balanced pendaftaran
+      ARCHIVE_SERVICE_URL: http://archive-service:3040
+      NODE_ENV: production
+      DB_CONNECTION_LIMIT: 30
+      INSTANCE_ID: replica-1
+    depends_on:
+      mysql:
+        condition: service_healthy
+      auth-service:
+        condition: service_healthy
+    networks:
+      - jelita-network-scaled
+
+  workflow-service-2:
+    build:
+      context: ./layanan-alur-kerja
+      dockerfile: Dockerfile
+    container_name: jelita-workflow-2
+    restart: unless-stopped
+    environment:
+      PORT: 3020
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_USER: root
+      DB_PASSWORD: JelitaMySQL2024
+      DB_NAME: jelita_workflow
+      JWT_SECRET: FFbdqS6NVE7ARw08MNUAj0sqXo7ZCEbZF7igEbMUH6tni78oSecretKeyAjzSPqYXvoyP02N
+      AUTH_SERVICE_URL: http://auth-service:3001
+      PENDAFTARAN_SERVICE_URL: http://api-gateway
+      ARCHIVE_SERVICE_URL: http://archive-service:3040
+      NODE_ENV: production
+      DB_CONNECTION_LIMIT: 30
+      INSTANCE_ID: replica-2
+    depends_on:
+      mysql:
+        condition: service_healthy
+      auth-service:
+        condition: service_healthy
+    networks:
+      - jelita-network-scaled
+
+  workflow-service-3:
+    build:
+      context: ./layanan-alur-kerja
+      dockerfile: Dockerfile
+    container_name: jelita-workflow-3
+    restart: unless-stopped
+    environment:
+      PORT: 3020
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_USER: root
+      DB_PASSWORD: JelitaMySQL2024
+      DB_NAME: jelita_workflow
+      JWT_SECRET: FFbdqS6NVE7ARw08MNUAj0sqXo7ZCEbZF7igEbMUH6tni78oSecretKeyAjzSPqYXvoyP02N
+      AUTH_SERVICE_URL: http://auth-service:3001
+      PENDAFTARAN_SERVICE_URL: http://api-gateway
+      ARCHIVE_SERVICE_URL: http://archive-service:3040
+      NODE_ENV: production
+      DB_CONNECTION_LIMIT: 30
+      INSTANCE_ID: replica-3
+    depends_on:
+      mysql:
+        condition: service_healthy
+      auth-service:
+        condition: service_healthy
+    networks:
+      - jelita-network-scaled
+
+  # Survey Service - 2 REPLICAS (moderate bottleneck)
+  survey-service-1:
+    build:
+      context: ./layanan-survei
+      dockerfile: Dockerfile
+    container_name: jelita-survey-1
+    restart: unless-stopped
+    environment:
+      PORT: 3030
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_USER: root
+      DB_PASSWORD: JelitaMySQL2024
+      DB_NAME: jelita_survei
+      JWT_SECRET: FFbdqS6NVE7ARw08MNUAj0sqXo7ZCEbZF7igEbMUH6tni78oSecretKeyAjzSPqYXvoyP02N
+      AUTH_SERVICE_URL: http://auth-service:3001
+      ARCHIVE_SERVICE_URL: http://archive-service:3040
+      NODE_ENV: production
+      DB_CONNECTION_LIMIT: 20
+      INSTANCE_ID: replica-1
+    depends_on:
+      mysql:
+        condition: service_healthy
+      auth-service:
+        condition: service_healthy
+    networks:
+      - jelita-network-scaled
+
+  survey-service-2:
+    build:
+      context: ./layanan-survei
+      dockerfile: Dockerfile
+    container_name: jelita-survey-2
+    restart: unless-stopped
+    environment:
+      PORT: 3030
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_USER: root
+      DB_PASSWORD: JelitaMySQL2024
+      DB_NAME: jelita_survei
+      JWT_SECRET: FFbdqS6NVE7ARw08MNUAj0sqXo7ZCEbZF7igEbMUH6tni78oSecretKeyAjzSPqYXvoyP02N
+      AUTH_SERVICE_URL: http://auth-service:3001
+      ARCHIVE_SERVICE_URL: http://archive-service:3040
+      NODE_ENV: production
+      DB_CONNECTION_LIMIT: 20
+      INSTANCE_ID: replica-2
+    depends_on:
+      mysql:
+        condition: service_healthy
+      auth-service:
+        condition: service_healthy
+    networks:
+      - jelita-network-scaled
+
+  # Archive Service (single instance - tidak bottleneck)
+  archive-service:
+    build:
+      context: ./layanan-arsip
+      dockerfile: Dockerfile
+    container_name: jelita-archive-scaled
+    restart: unless-stopped
+    environment:
+      PORT: 3040
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_USER: root
+      DB_PASSWORD: JelitaMySQL2024
+      DB_NAME: jelita_arsip
+      JWT_SECRET: FFbdqS6NVE7ARw08MNUAj0sqXo7ZCEbZF7igEbMUH6tni78oSecretKeyAjzSPqYXvoyP02N
+      AUTH_SERVICE_URL: http://auth-service:3001
+      NODE_ENV: production
+      DB_CONNECTION_LIMIT: 20
+    depends_on:
+      mysql:
+        condition: service_healthy
+      auth-service:
+        condition: service_healthy
+    networks:
+      - jelita-network-scaled
+
+networks:
+  jelita-network-scaled:
+    driver: bridge
+
+volumes:
+  mysql_data_scaled:

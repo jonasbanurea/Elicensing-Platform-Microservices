@@ -3,6 +3,8 @@ const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
 const sequelize = require('./utils/database');
+const bcrypt = require('bcryptjs');
+const User = require('./models/User');
 
 // Load environment variables
 dotenv.config();
@@ -34,9 +36,48 @@ sequelize.authenticate()
   });
 
 // Sync database models
+async function seedUsers() {
+  const defaults = [
+    { username: 'pemohon1', role: 'Pemohon', nama_lengkap: 'Pemohon Satu' },
+    { username: 'admin1', role: 'Admin', nama_lengkap: 'Admin Satu' },
+    { username: 'opd1', role: 'OPD', nama_lengkap: 'OPD Satu' },
+    { username: 'pimpinan1', role: 'Pimpinan', nama_lengkap: 'Pimpinan Satu' },
+  ];
+  for (const u of defaults) {
+    const existing = await User.findOne({ where: { username: u.username } });
+    if (!existing) {
+      const password_hash = await bcrypt.hash('password123', 10);
+      await User.create({ ...u, password_hash });
+      console.log(`✓ Seeded user ${u.username}`);
+    }
+  }
+}
+
+// Best-effort creation of performance indexes
+async function ensurePerfIndexes() {
+  const queries = [
+    'CREATE INDEX idx_permohonan_status ON permohonan (status)',
+    'CREATE INDEX idx_permohonan_user ON permohonan (user_id)',
+    'CREATE INDEX idx_permohonan_status_updated ON permohonan (status, updated_at)',
+    'CREATE INDEX idx_permohonan_updated ON permohonan (updated_at)'
+  ];
+  for (const q of queries) {
+    try {
+      await sequelize.query(q);
+    } catch (err) {
+      // Ignore if the index already exists
+      if (!/exists/i.test(err.message)) {
+        console.warn('Index creation warning:', err.message);
+      }
+    }
+  }
+}
+
 sequelize.sync({ alter: false })
-  .then(() => {
+  .then(async () => {
     console.log('✓ Database models synchronized');
+    await ensurePerfIndexes();
+    await seedUsers();
   })
   .catch(err => {
     console.error('✗ Database sync failed:', err.message);

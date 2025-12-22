@@ -5,32 +5,29 @@ Write-Host "=========================================" -ForegroundColor Cyan
 Write-Host "Setup Database untuk Jelita Microservices" -ForegroundColor Cyan
 Write-Host "=========================================" -ForegroundColor Cyan
 
-# Array services
+# Array services dengan reset + seed
 $services = @(
-    @{Name="Auth"; Container="jelita-auth"; Script="scripts/setupDatabase.js"},
-    @{Name="Pendaftaran"; Container="jelita-pendaftaran"; Script="scripts/setupDatabase.js"},
-    @{Name="Workflow"; Container="jelita-workflow"; Script="scripts/setupDatabase.js"},
-    @{Name="Survey"; Container="jelita-survey"; Script="scripts/setupDatabase.js"},
-    @{Name="Archive"; Container="jelita-archive"; Script="scripts/setupDatabase.js"}
+    @{Name="Auth"; Container="jelita-auth"; Scripts=@("scripts/resetDatabase.js", "scripts/seedTestData.js")},
+    @{Name="Pendaftaran"; Container="jelita-pendaftaran"; Scripts=@("scripts/resetDatabase.js", "scripts/seedTestData.js")},
+    @{Name="Workflow"; Container="jelita-workflow"; Scripts=@("scripts/resetDatabase.js", "scripts/seedTestData.js")},
+    @{Name="Survey"; Container="jelita-survey"; Scripts=@("scripts/resetDatabase.js", "scripts/seedTestData.js")},
+    @{Name="Archive"; Container="jelita-archive"; Scripts=@("scripts/resetDatabase.js", "scripts/seedTestData.js")}
 )
 
 # Loop untuk setiap service
 foreach ($service in $services) {
     Write-Host ""
-    Write-Host "[$($service.Name) Service] Setting up database..." -ForegroundColor Yellow
+    Write-Host "[$($service.Name) Service] Reset & Seed..." -ForegroundColor Yellow
     
-    # Jalankan setupDatabase.js jika ada
-    docker exec $service.Container sh -c "if [ -f $($service.Script) ]; then node $($service.Script); else echo 'No setupDatabase.js found'; fi"
+    foreach ($script in $service.Scripts) {
+        docker exec $service.Container sh -c "if [ -f $script ]; then node $script; else echo 'Missing script: ' $script; fi"
+    }
     
-    Write-Host "[$($service.Name) Service] Database setup completed" -ForegroundColor Green
+    Write-Host "[$($service.Name) Service] Database ready" -ForegroundColor Green
 }
-
-# Setup user Pemohon khusus untuk Auth service
-Write-Host ""
-Write-Host "[Auth Service] Creating Pemohon user..." -ForegroundColor Yellow
-docker exec jelita-auth sh -c "if [ -f scripts/createPemohonUser.js ]; then node scripts/createPemohonUser.js; else echo 'No createPemohonUser.js found'; fi"
 
 Write-Host ""
 Write-Host "=========================================" -ForegroundColor Cyan
-Write-Host "All databases setup completed!" -ForegroundColor Green
+Write-Host "All microservice databases reset & seeded!" -ForegroundColor Green
+Write-Host "Dataset: 50 pemohon, 10 admin, 10 OPD, 5 pimpinan; 100 permohonan; workflow/arsip/survey linked." -ForegroundColor Cyan
 Write-Host "=========================================" -ForegroundColor Cyan

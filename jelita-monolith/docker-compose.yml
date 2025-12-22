@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   # MySQL Database for Monolith
   mysql-monolith:
@@ -9,16 +7,17 @@ services:
       MYSQL_ROOT_PASSWORD: rootpassword
       MYSQL_DATABASE: jelita_monolith
     ports:
-      - "3307:3306"
+      - "3308:3306"
     volumes:
       - mysql-monolith-data:/var/lib/mysql
     networks:
       - jelita-monolith-network
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-prootpassword"]
       interval: 10s
       timeout: 5s
-      retries: 5
+      retries: 10
+      start_period: 30s
 
   # Jelita Monolith Application
   jelita-monolith:

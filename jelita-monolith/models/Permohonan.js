@@ -35,6 +35,15 @@ const Permohonan = sequelize.define('Permohonan', {
 }, {
   tableName: 'permohonan',
   timestamps: false,
+  indexes: [
+    // Speeds up list queries by status during load
+    { fields: ['status'] },
+    // Speeds up user-scoped lookups
+    { fields: ['user_id'] },
+    // Helps ordered pagination by updated_at for status queries
+    { fields: ['status', 'updated_at'] },
+    { fields: ['updated_at'] }
+  ],
 });
 
 module.exports = Permohonan;

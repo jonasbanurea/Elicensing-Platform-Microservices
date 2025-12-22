@@ -1,0 +1,17 @@
+{
+  "name": "jelita-performance-tests",
+  "version": "1.0.0",
+  "private": true,
+  "description": "k6 performance harness for JELITA monolith vs microservices",
+  "scripts": {
+    "test:baseline": "node ./loadtest/k6/run.js baseline",
+    "test:stress": "node ./loadtest/k6/run.js stress",
+    "test:spike": "node ./loadtest/k6/run.js spike",
+    "test:soak-baseline": "node ./loadtest/k6/run.js soak-baseline",
+    "test:soak-stress": "node ./loadtest/k6/run.js soak-stress",
+    "test:interop:contract": "k6 run --env BASE_URL=http://localhost:8080 --env OSS_MOCK_URL=http://localhost:4000 --out json=./test-results/interoperability/contract/contract-conformance-results.json ./loadtest/k6/interoperability/contract-conformance-test.js",
+    "test:interop:data-exchange": "k6 run --env BASE_URL=http://localhost:8080 --env OSS_MOCK_URL=http://localhost:4000 --out json=./test-results/interoperability/data-exchange/data-exchange-results.json ./loadtest/k6/interoperability/data-exchange-test.js",
+    "test:interop:all": "npm run test:interop:contract && npm run test:interop:data-exchange"
+  },
+  "license": "MIT"
+}

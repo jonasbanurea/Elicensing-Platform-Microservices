@@ -12,10 +12,11 @@ const sequelize = new Sequelize(
     dialect: 'mysql',
     logging: false,
     pool: {
-      max: 10,
-      min: 0,
-      acquire: 30000,
-      idle: 10000
+      // Allow more concurrent DB connections under load
+      max: 200,
+      min: 10,
+      acquire: 120000,
+      idle: 60000
     }
   }
 );

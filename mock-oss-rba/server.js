@@ -1,9 +1,17 @@
 /**
  * Mock OSS-RBA (One Single Submission - Risk Based Approach) Service
+ * Enhanced for Microservices Interoperability Testing
  * 
  * Purpose: Simulates the national SPBE platform for integration testing
  * This mock service implements the core OSS-RBA API endpoints required
- * for JELITA system integration validation.
+ * for JELITA system integration validation with complete contract support.
+ * 
+ * Features:
+ * - Full OpenAPI 3.0 contract compliance
+ * - Webhook callbacks for status updates
+ * - Idempotency key support
+ * - Configurable failure scenarios for resilience testing
+ * - Audit logging
  * 
  * Note: This is a MOCK service for testing purposes only.
  * Real OSS-RBA integration would require government API credentials.
@@ -12,10 +20,11 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
-const { v4: uuidv4 } = require('uuid');
+const axios = require('axios');
 
 const app = express();
 const PORT = process.env.PORT || 4000;
+const CALLBACK_URL = process.env.CALLBACK_URL || 'http://localhost:8080/api/webhooks/oss/status-update';
 
 // Middleware
 app.use(cors());
@@ -24,12 +33,30 @@ app.use(bodyParser.urlencoded({ extended: true }));
 
 // Request logging middleware
 app.use((req, res, next) => {
-  console.log(`[${new Date().toISOString()}] ${req.method} ${req.path}`);
+  const timestamp = new Date().toISOString();
+  console.log(`[${timestamp}] ${req.method} ${req.path}`);
+  if (req.headers['x-correlation-id']) {
+    console.log(`  Correlation-ID: ${req.headers['x-correlation-id']}`);
+  }
+  if (req.headers['idempotency-key']) {
+    console.log(`  Idempotency-Key: ${req.headers['idempotency-key']}`);
+  }
   next();
 });
 
-// In-memory storage for submissions (simulate database)
-const submissions = new Map();
+// In-memory storage (simulate database)
+const applications = new Map(); // OSS applications
+const idempotencyCache = new Map(); // Idempotency key tracking
+const auditLogs = []; // Audit trail
+
+// Configuration for testing scenarios
+let config = {
+  simulateFailure: false,
+  failureCount: 0,
+  currentFailures: 0,
+  callbackDelay: 5, // seconds
+  callbackEnabled: true,
+};
 
 /**
  * Simulate network/processing delay (100-300ms)

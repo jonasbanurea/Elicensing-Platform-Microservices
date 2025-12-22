@@ -1,100 +1,200 @@
-# Node modules
+# ========================================
+# JELITA MICROSERVICES PROJECT
+# Repository for: Microservices-Based Licensing Platform Research
+# ========================================
+
+# ----------------------------------------
+# Dependencies & Packages
+# ----------------------------------------
 node_modules/
 **/node_modules/
+package-lock.json
+**/package-lock.json
+.pnpm-debug.log*
+.npm/
+.yarn-integrity
 
-# Environment variables
+# ----------------------------------------
+# Environment & Secrets (NEVER COMMIT!)
+# ----------------------------------------
 .env
 **/.env
 *.env
 .env.local
-.env.*.local
+.env.development.local
+.env.test.local
+.env.production.local
 
-# Logs
+# JWT secrets and passwords
+secrets/
+**/secrets/
+*.key
+*.pem
+
+# ----------------------------------------
+# Runtime Logs & Outputs
+# ----------------------------------------
 logs/
 *.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+lerna-debug.log*
+pids/
+*.pid
+*.seed
+*.pid.lock
 
-# Test results and coverage
-reports/
-coverage/
-*.json.log
-stress-results.json
+# PM2 process manager
+.pm2/
+pm2-logs/
 
-# Database data
+# ----------------------------------------
+# Database & Data Files
+# ----------------------------------------
+# Docker volume data (will be recreated)
 mysql-data/
-*.sql.backup
+postgres-data/
+mongo-data/
 
-# IDE
+# Database backups (large files)
+*.sql.backup
+*.dump
+*.backup
+
+# ----------------------------------------
+# Test Results - RAW DATA (Exclude)
+# ----------------------------------------
+# Raw k6 JSON outputs (regenerated each test run)
+test-results/**/*.json
+test-results/**/*.html
+test-results/**/*.csv
+test-results/temp/
+test-results/debug/
+
+# IMPORTANT: Keep summary reports & analysis
+# These are research artifacts:
+# - reports/ directory (comprehensive analysis)
+# - Report-baseline-stress-user-count-jelita.md (methodology)
+# - SPBE_COMPLIANCE_CHECKLIST.md (compliance matrix)
+
+# ----------------------------------------
+# IDE & Editor Files
+# ----------------------------------------
 .vscode/
 .idea/
 *.swp
 *.swo
+*~
+.project
+.settings/
+*.sublime-project
+*.sublime-workspace
 
-# OS files
+# ----------------------------------------
+# OS-Specific Files
+# ----------------------------------------
 .DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
 Thumbs.db
+desktop.ini
 
-# Backup files
-*_BACKUP.md
-*_ID.md
-*.bak
-
-# Build outputs
+# ----------------------------------------
+# Build Artifacts
+# ----------------------------------------
 dist/
 build/
+*.tgz
+*.zip
 
-# PM2
-.pm2/
+# ----------------------------------------
+# Coverage & Quality Reports
+# ----------------------------------------
+coverage/
+.nyc_output/
+*.lcov
 
-# ========================================
-# INTERNAL WORKING DOCUMENTS
-# (Sprint tracking, not research evidence)
-# ========================================
-
-# Day-by-day progress tracking
+# ----------------------------------------
+# Internal Working Documents (Sprint Planning)
+# NOT FOR PUBLIC REPOSITORY
+# ----------------------------------------
+# Daily progress tracking
 DAY*_*.md
 TESTING_DAY*.md
+START_DAY*.md
 
-# Internal justifications and analysis
+# Internal analysis documents
 SOAK_TEST_JUSTIFICATION.md
 REVIEWER_COMMENTS_ANALYSIS.md
 REVIEWER_REQUESTS_STATUS.md
 PUBLISHER_REVISION_ANALYSIS.md
+INTERNAL_NOTES*.md
+PRIVATE_*.md
 
-# Writing guides and templates
-DAY3_PAPER_WRITING_GUIDE.md
+# Writing templates
 SECTION_*.md
+TEMPLATE_*.md
 
-# Sprint management
-START_DAY*.md
+# Sprint management (redundant with GitHub Issues/Projects)
 QUICK_STATUS.md
 QUICK_ACTION*.md
 EXECUTIVE_SUMMARY*.md
 MASTER_PROGRESS*.md
 WEEK_SPRINT*.md
 WHAT_TO_DO_NEXT.md
+TODO_INTERNAL.md
 
-# Indonesian summaries (internal)
-RINGKASAN_*.md
-laporan-*.md
-
-# Duplicate/redundant testing reports
-TESTING_EXECUTION_GUIDE.md
+# Redundant/outdated testing docs (superseded by comprehensive reports)
 TESTING_INFRASTRUCTURE_SUMMARY.md
 TESTING_QUICK_REFERENCE.md
 TESTING_REPORT_SUMMARY.md
 TESTING_RESULTS.md
 VISUAL_TESTING_SUMMARY.md
-report-baseline-stress-user-count-jelita.md
 
-# Test result files (large, generated)
-tests/results/*.json
-tests/results/*.html
+# Backup/duplicate files
+*_BACKUP.md
+*_OLD.md
+*.bak
+*.backup
+*.orig
 
-# Optional npm cache
-.npm
+# ----------------------------------------
+# Temporary Files
+# ----------------------------------------
+tmp/
+temp/
+*.tmp
+.cache/
 
-# Yarn
-.yarn-integrity
+# ----------------------------------------
+# Docker (Keep compose files, exclude runtime data)
+# ----------------------------------------
+# Keep: docker-compose.yml, docker-compose.scaleout.yml, Dockerfiles
+# Exclude: Runtime container data
+.docker/
+
+# ----------------------------------------
+# Git-Specific
+# ----------------------------------------
+*.patch
+*.diff
+
+# ========================================
+# KEEP THESE FILES (Research Evidence)
+# ========================================
+# ✅ reports/ - All comprehensive test reports
+# ✅ Report-baseline-stress-user-count-jelita.md - VU methodology
+# ✅ SPBE_COMPLIANCE_CHECKLIST.md - Compliance matrix
+# ✅ TESTING_EXECUTION_GUIDE.md - How to run tests
+# ✅ SCALE_OUT_TEST_GUIDE.md - Scaling instructions
+# ✅ INTEROPERABILITY_TESTING_GUIDE.md - Interop testing
+# ✅ README.md - Main documentation
+# ✅ All service code (layanan-*)
+# ✅ Docker configs (docker-compose.yml, Dockerfiles)
+# ✅ Test scripts (loadtest/k6/)
+# ✅ Database schemas (docker/init-db/)
+# ✅ PowerShell automation scripts (*.ps1)

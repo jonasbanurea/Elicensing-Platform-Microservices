@@ -1,0 +1,43 @@
+=== docker-compose ps (prototype_engv2, scaleout) ===
+NAME                       IMAGE                                   COMMAND                  SERVICE                 CREATED             STATUS                       PORTS
+jelita-archive-scaled      prototype_engv2-archive-service         "docker-entrypoint.sGǪ"   archive-service         2 hours ago         Up 2 hours (healthy)         3040/tcp
+jelita-auth-scaled         prototype_engv2-auth-service            "docker-entrypoint.sGǪ"   auth-service            54 minutes ago      Up 54 minutes (healthy)      0.0.0.0:3001->3001/tcp, [::]:3001->3001/tcp
+jelita-gateway-scaled      nginx:1.25-alpine                       "/docker-entrypoint.GǪ"   api-gateway             About an hour ago   Up About an hour             0.0.0.0:8080->80/tcp, [::]:8080->80/tcp
+jelita-mysql-scaled        mysql:8.0                               "docker-entrypoint.sGǪ"   mysql                   About an hour ago   Up About an hour (healthy)   0.0.0.0:3307->3306/tcp, [::]:3307->3306/tcp
+jelita-pendaftaran         prototype_engv2-pendaftaran-service     "docker-entrypoint.sGǪ"   pendaftaran-service     11 hours ago        Up 2 hours (healthy)         0.0.0.0:3010->3010/tcp, [::]:3010->3010/tcp
+jelita-pendaftaran-1       prototype_engv2-pendaftaran-service-1   "docker-entrypoint.sGǪ"   pendaftaran-service-1   54 minutes ago      Up 54 minutes (healthy)      3010/tcp
+jelita-pendaftaran-2       prototype_engv2-pendaftaran-service-2   "docker-entrypoint.sGǪ"   pendaftaran-service-2   54 minutes ago      Up 54 minutes (healthy)      3010/tcp
+jelita-pendaftaran-3       prototype_engv2-pendaftaran-service-3   "docker-entrypoint.sGǪ"   pendaftaran-service-3   54 minutes ago      Up 54 minutes (healthy)      3010/tcp
+jelita-phpmyadmin-scaled   phpmyadmin:latest                       "/docker-entrypoint.GǪ"   phpmyadmin              2 hours ago         Up 2 hours                   0.0.0.0:8081->80/tcp, [::]:8081->80/tcp
+jelita-survey              prototype_engv2-survey-service          "docker-entrypoint.sGǪ"   survey-service          12 hours ago        Up 2 hours (healthy)         0.0.0.0:3030->3030/tcp, [::]:3030->3030/tcp
+jelita-survey-1            prototype_engv2-survey-service-1        "docker-entrypoint.sGǪ"   survey-service-1        21 hours ago        Up 2 hours (healthy)         3030/tcp
+jelita-survey-2            prototype_engv2-survey-service-2        "docker-entrypoint.sGǪ"   survey-service-2        21 hours ago        Up 2 hours (healthy)         3030/tcp
+jelita-workflow            prototype_engv2-workflow-service        "docker-entrypoint.sGǪ"   workflow-service        12 hours ago        Up 2 hours (healthy)         0.0.0.0:3020->3020/tcp, [::]:3020->3020/tcp
+jelita-workflow-1          prototype_engv2-workflow-service-1      "docker-entrypoint.sGǪ"   workflow-service-1      21 hours ago        Up 2 hours (healthy)         3020/tcp
+jelita-workflow-2          prototype_engv2-workflow-service-2      "docker-entrypoint.sGǪ"   workflow-service-2      21 hours ago        Up 2 hours (healthy)         3020/tcp
+jelita-workflow-3          prototype_engv2-workflow-service-3      "docker-entrypoint.sGǪ"   workflow-service-3      21 hours ago        Up 2 hours (healthy)         3020/tcp
+
+
+=== service-directory via gateway (http://localhost:8080/api/v1/service-directory) ===
+curl.exe :   % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+At line:1 char:588
++ ... review.txt; curl.exe http://localhost:8080/api/v1/service-directory 2 ...
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (  % Total    % ...  Time  Current:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+                                 Dload  Upload   Total   Spent    Left  Speed
+
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0
+100   153  100   153    0     0  14876      0 --:--:-- --:--:-- --:--:-- 15300
+<html>
+<head><title>404 Not Found</title></head>
+<body>
+<center><h1>404 Not Found</h1></center>
+<hr><center>nginx/1.25.5</center>
+</body>
+</html>
+
+
+=== timestamp ===
+2025-12-22 11:06:24+07:00

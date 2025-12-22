@@ -9,6 +9,7 @@
  */
 
 const axios = require('axios');
+const https = require('https');
 require('dotenv').config();
 
 // Circuit breaker state
@@ -73,7 +74,11 @@ const ossClient = axios.create({
   headers: {
     'Content-Type': 'application/json',
     'User-Agent': 'JELITA-Gateway/1.0'
-  }
+  },
+  // Enforce TLS verification by default; allow explicit opt-out via OSS_RBA_ALLOW_INSECURE=false/true
+  httpsAgent: new https.Agent({
+    rejectUnauthorized: process.env.OSS_RBA_ALLOW_INSECURE === 'true' ? false : true
+  })
 });
 
 /**

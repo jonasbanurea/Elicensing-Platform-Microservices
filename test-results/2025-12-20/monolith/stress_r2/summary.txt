@@ -1,0 +1,57 @@
+     █ login-Admin
+
+       ✓ signin status is 200
+       ✓ signin success flag
+
+       █ admin-flow
+
+         ✓ list permohonan 200
+         ✓ approve 200
+         ✓ disposisi status 201
+
+     █ login-Pemohon
+
+       ✓ signin status is 200
+       ✓ signin success flag
+
+       █ pemohon-flow
+
+         ✓ create permohonan 201
+         ✓ submit permohonan ok
+
+     █ login-Pimpinan
+
+       ✓ signin status is 200
+       ✓ signin success flag
+
+       █ pimpinan-flow
+
+     █ login-OPD
+
+       ✓ signin status is 200
+       ✓ signin success flag
+
+       █ opd-flow
+
+   ✓ auth_latency...................: avg=235.08ms min=54.72ms  p(50)=195.65ms p(90)=456.7ms  p(95)=577.23ms p(99)=773.62ms max=1.43s  
+     checks.........................: 100.00% ✓ 14678     ✗ 0    
+     data_received..................: 11 MB   23 kB/s
+     data_sent......................: 6.1 MB  13 kB/s
+     group_duration.................: avg=7.11s    min=632.29µs p(50)=7.65s    p(90)=10.24s   p(95)=10.84s   p(99)=11.98s   max=15.48s 
+     http_req_blocked...............: avg=5.93µs   min=0s       p(50)=0s       p(90)=0s       p(95)=0s       p(99)=0s       max=43.43ms
+     http_req_connecting............: avg=1.49µs   min=0s       p(50)=0s       p(90)=0s       p(95)=0s       p(99)=0s       max=1.39ms 
+   ✓ http_req_duration..............: avg=638.62ms min=539.29µs p(50)=528.88ms p(90)=1.48s    p(95)=1.78s    p(99)=2.36s    max=5.7s   
+       { expected_response:true }...: avg=638.62ms min=539.29µs p(50)=528.88ms p(90)=1.48s    p(95)=1.78s    p(99)=2.36s    max=5.7s   
+   ✓ http_req_failed................: 0.00%   ✓ 0         ✗ 17258
+     http_req_receiving.............: avg=63.06µs  min=0s       p(50)=0s       p(90)=52.49µs  p(95)=520.2µs  p(99)=596.05µs max=16.34ms
+     http_req_sending...............: avg=13.32µs  min=0s       p(50)=0s       p(90)=0s       p(95)=0s       p(99)=518.14µs max=42.92ms
+     http_req_tls_handshaking.......: avg=0s       min=0s       p(50)=0s       p(90)=0s       p(95)=0s       p(99)=0s       max=0s     
+     http_req_waiting...............: avg=638.54ms min=539.29µs p(50)=528.88ms p(90)=1.48s    p(95)=1.78s    p(99)=2.36s    max=5.7s   
+     http_reqs......................: 17258   35.645635/s
+     iteration_duration.............: avg=8.22s    min=1.09s    p(50)=8.93s    p(90)=10.81s   p(95)=11.36s   p(99)=12.56s   max=15.48s 
+     iterations.....................: 3869    7.991248/s
+   ✓ permohonan_latency.............: avg=1.11s    min=539.29µs p(50)=1s       p(90)=1.89s    p(95)=2.13s    p(99)=2.71s    max=5.7s   
+   ✓ survey_latency.................: avg=686.29ms min=198.85ms p(50)=649.5ms  p(90)=944.56ms p(95)=1.06s    p(99)=1.39s    max=3.46s  
+     vus............................: 1       min=1       max=75 
+     vus_max........................: 75      min=75      max=75 
+   ✓ workflow_latency...............: avg=640.86ms min=655.5µs  p(50)=668.6ms  p(90)=1.14s    p(95)=1.28s    p(99)=1.71s    max=2.04s  

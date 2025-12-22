@@ -4,6 +4,7 @@ const Disposisi = require('../models/Disposisi');
 const KajianTeknis = require('../models/KajianTeknis');
 const DraftIzin = require('../models/DraftIzin');
 const Permohonan = require('../models/Permohonan');
+const SKM = require('../models/SKM');
 const { authMiddleware, authorize } = require('../middleware/authMiddleware');
 
 const router = express.Router();
@@ -223,11 +224,29 @@ router.put('/api/draft-izin/:id/setujui', authMiddleware, authorize('Pimpinan'),
       tanggal_persetujuan: new Date()
     });
 
-    // Update permohonan status to approved
-    await Permohonan.update(
-      { status: 'approved' },
-      { where: { id: draft.permohonan_id } }
-    );
+    // Update permohonan status to approved and fetch data
+    const permohonan = await Permohonan.findByPk(draft.permohonan_id);
+    if (!permohonan) {
+      return res.status(404).json({
+        success: false,
+        message: 'Permohonan not found for this draft'
+      });
+    }
+
+    await permohonan.update({ status: 'approved' });
+
+    // Create SKM notification if not exists so survey submission works
+    await SKM.findOrCreate({
+      where: { permohonan_id: permohonan.id },
+      defaults: {
+        permohonan_id: permohonan.id,
+        user_id: permohonan.user_id,
+        nomor_registrasi: permohonan.nomor_registrasi,
+        jawaban_json: {},
+        status: 'pending',
+        notified_at: new Date()
+      }
+    });
 
     res.json({
       success: true,
