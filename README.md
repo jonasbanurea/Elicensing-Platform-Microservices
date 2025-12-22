@@ -19,7 +19,7 @@ This project has undergone comprehensive testing across three critical dimension
 **What Makes This Different:**
 Testing wasn't an afterthought—it drove architectural decisions. When initial tests revealed bottlenecks, we implemented scale-out solutions and validated them through extended soak testing. The numbers below reflect real performance under sustained load, not synthetic benchmarks.
 
-See detailed reports: [Comprehensive Scalability Report](reports/scalability-testing-report-comprehensive.md) | [Interoperability Results](reports/interoperability-test-results-2025-12-22.md) | [Load Testing Methodology](Report-baseline-stress-user-count-jelita.md)
+See detailed reports: [Comprehensive Scalability Report](reports/scalability-testing-report-comprehensive.md) | [Interoperability Results](reports/interoperability-test-results-2025-12-22.md) | [Load Testing Methodology](docs/reports/Report-baseline-stress-user-count-jelita.md)
 
 ---
 
@@ -33,6 +33,7 @@ See detailed reports: [Comprehensive Scalability Report](reports/scalability-tes
 - [Testing & Validation](#testing--validation)
 - [Deployment](#deployment)
 - [Documentation](#documentation)
+  - [📚 Complete Documentation Hub](docs/README.md)
 
 ---
 
@@ -236,7 +237,7 @@ curl -X POST http://localhost:3001/api/auth/login `
 # Use token for subsequent requests
 ```
 
-**📚 See complete documentation**: [DOCKER_QUICK_START.md](DOCKER_QUICK_START.md)
+**📚 See complete documentation**: [Documentation Index](docs/README.md)
 
 ---
 
@@ -418,7 +419,7 @@ Where:
 
 **Validation**: Sensitivity analysis across different R and Z values confirmed these numbers represent realistic production scenarios, not synthetic benchmarks.
 
-See complete methodology: [Report-baseline-stress-user-count-jelita.md](Report-baseline-stress-user-count-jelita.md)
+See complete methodology: [Report-baseline-stress-user-count-jelita.md](docs/reports/Report-baseline-stress-user-count-jelita.md)
 
 ---
 
@@ -469,7 +470,7 @@ docker-compose -f docker-compose.scaleout.yml ps
 - ✅ Service health checks passing
 - ✅ Zero container crashes
 
-See execution guides: [TESTING_EXECUTION_GUIDE.md](TESTING_EXECUTION_GUIDE.md) | [SCALE_OUT_TEST_GUIDE.md](SCALE_OUT_TEST_GUIDE.md) | [INTEROPERABILITY_TESTING_GUIDE.md](INTEROPERABILITY_TESTING_GUIDE.md)
+See execution guides: [TESTING_EXECUTION_GUIDE.md](docs/testing/TESTING_EXECUTION_GUIDE.md) | [SCALE_OUT_TEST_GUIDE.md](docs/testing/SCALE_OUT_TEST_GUIDE.md) | [INTEROPERABILITY_TESTING_GUIDE.md](docs/testing/INTEROPERABILITY_TESTING_GUIDE.md)
 
 ---
 
@@ -492,7 +493,7 @@ Each service exposes a health endpoint:
 - `GET /health` → `{"status":"healthy","service":"auth","timestamp":"..."}`
 
 **Advanced** (optional): Setup Prometheus + Grafana
-- See [DOCKER_DEPLOYMENT_GUIDE.md](DOCKER_DEPLOYMENT_GUIDE.md) Observability section
+- See [Testing Documentation](docs/testing/) for observability setup
 
 ---
 
@@ -602,20 +603,19 @@ prototype_eng V2/
 ## 📚 Documentation
 
 ### Core Documentation
-- **[Report-baseline-stress-user-count-jelita.md](Report-baseline-stress-user-count-jelita.md)** - VU selection methodology using Little's Law & production data
+- **[Report-baseline-stress-user-count-jelita.md](docs/reports/Report-baseline-stress-user-count-jelita.md)** - VU selection methodology using Little's Law & production data
 - **[reports/scalability-testing-report-comprehensive.md](reports/scalability-testing-report-comprehensive.md)** - Complete 3-phase scalability testing (22 hours)
 - **[reports/interoperability-test-results-2025-12-22.md](reports/interoperability-test-results-2025-12-22.md)** - Contract, data exchange & SPBE compliance (100% contract conformance)
-- **[SPBE_COMPLIANCE_CHECKLIST.md](SPBE_COMPLIANCE_CHECKLIST.md)** - Indonesian national standards compliance (58 requirements verified)
+- **[SPBE_COMPLIANCE_CHECKLIST.md](docs/reports/SPBE_COMPLIANCE_CHECKLIST.md)** - Indonesian national standards compliance (58 requirements verified)
 
 ### Testing Guides
-- **[TESTING_EXECUTION_GUIDE.md](TESTING_EXECUTION_GUIDE.md)** - Step-by-step test execution instructions
-- **[SCALE_OUT_TEST_GUIDE.md](SCALE_OUT_TEST_GUIDE.md)** - Horizontal scaling deployment & validation
-- **[INTEROPERABILITY_TESTING_GUIDE.md](INTEROPERABILITY_TESTING_GUIDE.md)** - Interoperability test framework & scenarios
+- **[TESTING_EXECUTION_GUIDE.md](docs/testing/TESTING_EXECUTION_GUIDE.md)** - Step-by-step test execution instructions
+- **[SCALE_OUT_TEST_GUIDE.md](docs/testing/SCALE_OUT_TEST_GUIDE.md)** - Horizontal scaling deployment & validation
+- **[INTEROPERABILITY_TESTING_GUIDE.md](docs/testing/INTEROPERABILITY_TESTING_GUIDE.md)** - Interoperability test framework & scenarios
 
 ### Deployment Guides
-- **[DOCKER_QUICK_START.md](DOCKER_QUICK_START.md)** - 10-minute quick start guide
-- **[DOCKER_DEPLOYMENT_GUIDE.md](DOCKER_DEPLOYMENT_GUIDE.md)** - Comprehensive deployment & troubleshooting
-- **[SETUP_COMPLETE_DOCKER.md](SETUP_COMPLETE_DOCKER.md)** - Post-deployment verification checklist
+- **[Documentation Index](docs/README.md)** - Complete documentation hub with setup, testing, and reports
+- **[SETUP_COMPLETE_DOCKER.md](docs/setup/SETUP_COMPLETE_DOCKER.md)** - Post-deployment verification checklist
 
 ### Service-Specific Documentation
 - **Archive Service**: `layanan-arsip/postman/QUICK_START.md` - API testing guide
@@ -712,7 +712,7 @@ This project's approach: Calculate from production data using queuing theory
 - ✅ Reproducible methodology applicable to other systems
 - ✅ Addresses reviewer question: "How did you choose these load levels?"
 
-See complete justification: [Report-baseline-stress-user-count-jelita.md](Report-baseline-stress-user-count-jelita.md)
+See complete justification: [Report-baseline-stress-user-count-jelita.md](docs/reports/Report-baseline-stress-user-count-jelita.md)
 
 ---
 
@@ -813,7 +813,7 @@ docker-compose down -v
 docker-compose up -d --build
 ```
 
-**See complete troubleshooting**: [DOCKER_DEPLOYMENT_GUIDE.md](DOCKER_DEPLOYMENT_GUIDE.md#troubleshooting)
+**See complete troubleshooting**: [Testing Documentation](docs/testing/)
 
 ---
 
@@ -927,9 +927,9 @@ docker-compose -f docker-compose.scaleout.yml ps
 ### Getting Help
 
 1. **Documentation**: Check comprehensive guides in project root
-   - [DOCKER_DEPLOYMENT_GUIDE.md](DOCKER_DEPLOYMENT_GUIDE.md) - Full troubleshooting section
-   - [TESTING_EXECUTION_GUIDE.md](TESTING_EXECUTION_GUIDE.md) - Test-specific issues
-   - [SCALE_OUT_TEST_GUIDE.md](SCALE_OUT_TEST_GUIDE.md) - Scaling problems
+   - [Documentation Index](docs/README.md) - Full troubleshooting resources
+   - [TESTING_EXECUTION_GUIDE.md](docs/testing/TESTING_EXECUTION_GUIDE.md) - Test-specific issues
+   - [SCALE_OUT_TEST_GUIDE.md](docs/testing/SCALE_OUT_TEST_GUIDE.md) - Scaling problems
 
 2. **Test Results**: Review logs in `test-results/` directory for specific error details
 
