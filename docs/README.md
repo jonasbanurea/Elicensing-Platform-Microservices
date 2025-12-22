@@ -25,12 +25,12 @@ Located in [`testing/`](testing/)
 Located in [`reports/`](reports/)
 
 - **[Comprehensive Scalability Report](../reports/scalability-testing-report-comprehensive.md)** - Main test report (22+ hours)
+- **[Interoperability Test Results](reports/interoperability-test-results-2025-12-22.md)** - Latest interop results with sequence diagram
 - **[VU Selection Methodology](reports/Report-baseline-stress-user-count-jelita.md)** - Load test parameter calculation
 - **[SPBE Compliance Checklist](reports/SPBE_COMPLIANCE_CHECKLIST.md)** - National standards compliance (59%)
 - **[OSS Integration Report](reports/OSS_INTEGRATION_REPORT.md)** - External platform integration
 - **[Testing Results Summary](reports/TESTING_RESULTS.md)** - Consolidated results
 - **[Reviewer Response](reports/REVIEWER_RESPONSE_WORKFLOW_SCOPE.md)** - Academic review responses
-- **[Interoperability Test Results](../reports/interoperability-test-results-2025-12-22.md)** - Latest interop results
 
 ### ⚙️ Setup & Deployment
 Located in [`setup/`](setup/)
@@ -101,9 +101,10 @@ docs/
 | [SOAK_TEST_PLAN.md](testing/SOAK_TEST_PLAN.md) | 14.29 KB | Stability tests |
 | [MICROSERVICES_INTEROPERABILITY_TEST_PLAN.md](testing/MICROSERVICES_INTEROPERABILITY_TEST_PLAN.md) | 36.14 KB | Test plan |
 
-### Reports & Analysis (5 files)
+### Reports & Analysis (6 files)
 | Document | Size | Description |
 |----------|------|-------------|
+| [interoperability-test-results-2025-12-22.md](reports/interoperability-test-results-2025-12-22.md) | 70.12 KB | Interop test results |
 | [Report-baseline-stress-user-count-jelita.md](reports/Report-baseline-stress-user-count-jelita.md) | 9.24 KB | VU methodology |
 | [TESTING_RESULTS.md](reports/TESTING_RESULTS.md) | 27.08 KB | Results summary |
 | [OSS_INTEGRATION_REPORT.md](reports/OSS_INTEGRATION_REPORT.md) | 19.88 KB | Integration report |
@@ -152,5 +153,5 @@ All documentation in this project follows:
 ---
 
 **Last Updated**: December 22, 2025  
-**Total Documents**: 16 organized files  
+**Total Documents**: 17 organized files  
 **Documentation Coverage**: Setup, Testing, Reports, Analysis

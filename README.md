@@ -19,7 +19,7 @@ This project has undergone comprehensive testing across three critical dimension
 **What Makes This Different:**
 Testing wasn't an afterthought—it drove architectural decisions. When initial tests revealed bottlenecks, we implemented scale-out solutions and validated them through extended soak testing. The numbers below reflect real performance under sustained load, not synthetic benchmarks.
 
-See detailed reports: [Comprehensive Scalability Report](reports/scalability-testing-report-comprehensive.md) | [Interoperability Results](reports/interoperability-test-results-2025-12-22.md) | [Load Testing Methodology](docs/reports/Report-baseline-stress-user-count-jelita.md)
+See detailed reports: [Comprehensive Scalability Report](reports/scalability-testing-report-comprehensive.md) | [Interoperability Results](docs/reports/interoperability-test-results-2025-12-22.md) | [Load Testing Methodology](docs/reports/Report-baseline-stress-user-count-jelita.md)
 
 ---
 
@@ -605,7 +605,7 @@ prototype_eng V2/
 ### Core Documentation
 - **[Report-baseline-stress-user-count-jelita.md](docs/reports/Report-baseline-stress-user-count-jelita.md)** - VU selection methodology using Little's Law & production data
 - **[reports/scalability-testing-report-comprehensive.md](reports/scalability-testing-report-comprehensive.md)** - Complete 3-phase scalability testing (22 hours)
-- **[reports/interoperability-test-results-2025-12-22.md](reports/interoperability-test-results-2025-12-22.md)** - Contract, data exchange & SPBE compliance (100% contract conformance)
+- **[docs/reports/interoperability-test-results-2025-12-22.md](docs/reports/interoperability-test-results-2025-12-22.md)** - Contract, data exchange & SPBE compliance (100% contract conformance)
 - **[SPBE_COMPLIANCE_CHECKLIST.md](docs/reports/SPBE_COMPLIANCE_CHECKLIST.md)** - Indonesian national standards compliance (58 requirements verified)
 
 ### Testing Guides
