@@ -68,7 +68,12 @@ mongo-data/
 # Raw k6 JSON outputs (regenerated each test run)
 test-results/**/*.json
 test-results/**/*.html
-test-results/**/*.csv
+
+# Large CSV metrics (use compressed version)
+test-results/**/metrics.csv
+# But keep the compressed version
+!test-results/**/metrics.zip
+
 test-results/temp/
 test-results/debug/
 
@@ -77,6 +82,7 @@ test-results/debug/
 # - reports/ directory (comprehensive analysis)
 # - Report-baseline-stress-user-count-jelita.md (methodology)
 # - SPBE_COMPLIANCE_CHECKLIST.md (compliance matrix)
+# - test-results/**/metrics.zip (compressed scalability data)
 
 # ----------------------------------------
 # IDE & Editor Files
