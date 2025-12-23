@@ -58,33 +58,33 @@ The following sequence diagram illustrates the two-phase interoperability patter
 ```mermaid
 sequenceDiagram
     participant Client
-    participant API Gateway (TS3)
-    participant OSS Adapter
-    participant Mock/Sandbox OSS
-    participant Internal Services<br/>(Workflow + Archive)
+    participant Gateway as API Gateway (TS3)
+    participant Adapter as OSS Adapter
+    participant OSS as Mock/Sandbox OSS
+    participant Internal as Internal Services (Workflow + Archive)
     
-    Note over Client,Internal Services: Phase 1: Outbound Submission (Synchronous)
+    Note over Client,Internal: Phase 1: Outbound Submission (Synchronous)
     
-    Note right of Client: Idempotency Key<br/>generated
-    Client->>API Gateway (TS3): POST /submit-application<br/>[Authorization, Idempotency-Key]
-    Note right of API Gateway (TS3): Correlation-ID<br/>propagation
-    API Gateway (TS3)->>OSS Adapter: Forward with Correlation-ID
-    OSS Adapter->>Internal Services<br/>(Workflow + Archive): Create application record
-    Internal Services<br/>(Workflow + Archive)-->>OSS Adapter: Application ID
-    OSS Adapter->>Mock/Sandbox OSS: Submit to external platform<br/>[Correlation-ID, callback URL]
-    Mock/Sandbox OSS-->>OSS Adapter: 202 Accepted (submission_id)
-    OSS Adapter-->>API Gateway (TS3): 202 Accepted
-    API Gateway (TS3)-->>Client: 202 Accepted (tracking ID)
+    Note right of Client: Idempotency Key generated
+    Client->>Gateway: POST /submit-application<br/>[Authorization, Idempotency-Key]
+    Note right of Gateway: Correlation-ID propagation
+    Gateway->>Adapter: Forward with Correlation-ID
+    Adapter->>Internal: Create application record
+    Internal-->>Adapter: Application ID
+    Adapter->>OSS: Submit to external platform<br/>[Correlation-ID, callback URL]
+    OSS-->>Adapter: 202 Accepted (submission_id)
+    Adapter-->>Gateway: 202 Accepted
+    Gateway-->>Client: 202 Accepted (tracking ID)
     
-    Note over Client,Internal Services: Phase 2: Inbound Callback (Asynchronous)
+    Note over Client,Internal: Phase 2: Inbound Callback (Asynchronous)
     
-    Mock/Sandbox OSS->>API Gateway (TS3): POST /callback/approval<br/>[X-Webhook-Signature, Correlation-ID]
-    Note right of API Gateway (TS3): Webhook Signature<br/>Verification
-    API Gateway (TS3)->>OSS Adapter: Verify and forward
-    OSS Adapter->>Internal Services<br/>(Workflow + Archive): Update application status<br/>[Correlation-ID match]
-    Internal Services<br/>(Workflow + Archive)-->>OSS Adapter: Status updated
-    OSS Adapter-->>API Gateway (TS3): 200 OK
-    API Gateway (TS3)-->>Mock/Sandbox OSS: 200 OK (callback acknowledged)
+    OSS->>Gateway: POST /callback/approval<br/>[X-Webhook-Signature, Correlation-ID]
+    Note right of Gateway: Webhook Signature Verification
+    Gateway->>Adapter: Verify and forward
+    Adapter->>Internal: Update application status<br/>[Correlation-ID match]
+    Internal-->>Adapter: Status updated
+    Adapter-->>Gateway: 200 OK
+    Gateway-->>OSS: 200 OK (callback acknowledged)
 ```
 
 **Key Control Mechanisms (Critical for Interoperability):**
