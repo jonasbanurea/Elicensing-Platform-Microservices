@@ -645,7 +645,7 @@ Error responses maintain consistency across all microservices:
 1. Table 1: Contract Conformance Results (100% pass rate)
 2. Table 2: Data Exchange Test Results (98-100% success)
 3. Table 3: Data Integrity Verificati59% weighted maturityns validated)
-4. Table 4: SPBE Compliance Summary (82% compliance score)
+4. Table 4: SPBE Compliance Summary (59% weighted maturity score)
 5. Figure: Correlation ID trace diagram showing 8-step flow
 6. Figure: Service catalog JSON structure
 
