@@ -47,18 +47,18 @@ This comprehensive summary synthesizes performance testing results from three ar
 ### Architecture-Specific Configurations
 
 **1. Monolith:**
-- Containers: 2 (monolith app + MySQL)
-- Database: Single MySQL instance
+- Containers: 2 (monolith app + MySQL 8.0)
+- Database: Single MySQL instance with unified schema
 - Entry point: localhost:3000
 
 **2. Microservices Single-Node:**
-- Containers: 8 (API Gateway + 5 services + MySQL + Redis)
+- Containers: 7 (API Gateway + 5 services + shared MySQL 8.0)
 - Services: Auth, Application, Workflow, Survey, Archive
-- Databases: Separate MySQL per service
+- Database: Shared MySQL 8.0 with separate schemas per service (5 schemas)
 - Entry point: localhost:8080
 
 **3. Microservices Scale-Out:**
-- Containers: 13+ (Nginx + scaled replicas + databases)
+- Containers: 14 (Nginx + 12 service replicas + shared MySQL 8.0)
 - Replica configuration:
   - API Gateway: 2 replicas
   - Auth Service: 2 replicas
@@ -66,6 +66,7 @@ This comprehensive summary synthesizes performance testing results from three ar
   - Workflow Service: 2 replicas
   - Survey Service: 2 replicas
   - Archive Service: 2 replicas
+- Database: Same shared MySQL 8.0 with separate schemas (5 schemas)
 - Load balancer: Nginx (round-robin)
 - Entry point: localhost:8080 (via Nginx)
 
@@ -233,9 +234,9 @@ Super-linear scaling (>100%) in scale-out indicates that:
 
 | Aspect | Monolith | Single-Node Microservices | Scale-Out Microservices |
 |--------|----------|---------------------------|-------------------------|
-| **Deployment Complexity** | ⭐⭐⭐⭐⭐ Simple (2 containers) | ⭐⭐⭐ Moderate (8 containers) | ⭐⭐ Complex (13+ containers) |
+| **Deployment Complexity** | ⭐⭐⭐⭐⭐ Simple (2 containers) | ⭐⭐⭐ Moderate (7 containers) | ⭐⭐ Complex (14 containers) |
 | **Operational Overhead** | ⭐⭐⭐⭐⭐ Minimal | ⭐⭐⭐ Moderate | ⭐⭐ High (Nginx, replicas) |
-| **Resource Usage** | ⭐⭐⭐⭐⭐ Low (2 containers) | ⭐⭐⭐ Medium (8 containers) | ⭐⭐ High (13+ containers) |
+| **Resource Usage** | ⭐⭐⭐⭐⭐ Low (2 containers) | ⭐⭐⭐ Medium (7 containers) | ⭐⭐ High (14 containers) |
 | **Stress Performance** | ⭐⭐⭐ Good (1,684ms) | ⭐⭐ Poor (2,437ms) | ⭐⭐⭐⭐⭐ Excellent (840ms) |
 | **Baseline Performance** | ⭐⭐ Fair (1,027ms) | ⭐⭐⭐⭐⭐ Excellent (611ms) | ⭐⭐⭐⭐⭐ Excellent (607ms) |
 | **Scalability Potential** | ⭐⭐⭐ Limited (vertical only) | ⭐⭐⭐ Moderate (single host) | ⭐⭐⭐⭐ Good (horizontal) |
@@ -277,7 +278,7 @@ Super-linear scaling (>100%) in scale-out indicates that:
 - ✅ Best baseline throughput (27.58 req/s, 38% more than monolith)
 - ✅ Excellent baseline latency (611 ms, 40% faster than monolith)
 - ✅ Service-level isolation and independence
-- ✅ Moderate deployment complexity (8 containers)
+- ✅ Moderate deployment complexity (7 containers: 1 Nginx gateway + 5 services + 1 shared MySQL)
 
 **Weaknesses:**
 - ❌ Worst stress performance (2,437 ms p95, 3.99× degradation)
@@ -307,7 +308,7 @@ Super-linear scaling (>100%) in scale-out indicates that:
 - ✅ Excellent baseline latency (607 ms, tied with single-node)
 
 **Weaknesses:**
-- ❌ Highest deployment complexity (13+ containers)
+- ❌ Highest deployment complexity (14 containers: 1 Nginx LB + 12 service replicas + 1 shared MySQL)
 - ❌ Highest resource consumption
 - ❌ Additional Nginx routing overhead at baseline
 - ❌ Lower baseline throughput than single-node (21.88 vs 27.58 req/s)
