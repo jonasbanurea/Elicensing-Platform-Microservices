@@ -1,5 +1,10 @@
 // Reset workflow service database for repeatable runs
 const sequelize = require('../utils/database');
+// Import all models to ensure they're registered
+const Disposisi = require('../models/Disposisi');
+const DraftIzin = require('../models/DraftIzin');
+const KajianTeknis = require('../models/KajianTeknis');
+const RevisiDraft = require('../models/RevisiDraft');
 
 async function resetDatabase() {
   try {

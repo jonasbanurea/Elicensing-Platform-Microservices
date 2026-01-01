@@ -1,5 +1,7 @@
 // Reset application/pendaftaran database for repeatable performance tests
 const sequelize = require('../utils/database');
+const Permohonan = require('../models/Permohonan'); // Import models to ensure they're registered
+const Dokumen = require('../models/Dokumen');
 
 async function resetDatabase() {
   try {

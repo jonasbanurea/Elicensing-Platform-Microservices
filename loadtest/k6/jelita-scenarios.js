@@ -1,7 +1,24 @@
+// Minimal local summary generator to avoid external dependency fetch
+function localTextSummary(data) {
+  const metrics = data.metrics || {};
+  const fmt = (n) => (typeof n === 'number' && Number.isFinite(n) ? n.toFixed(2) : 'n/a');
+  const p = (m, key) => fmt(m?.values?.[key]);
+  const line = (label, value) => `${label.padEnd(20, ' ')}${value}`;
+  const http = metrics.http_req_duration || {};
+  const failed = metrics.http_req_failed || {};
+  const reqs = metrics.http_reqs || {};
+  const out = [
+    'K6 Summary (offline text)',
+    line('requests', fmt(reqs.count || 0)),
+    line('http_req_failed rate', p(failed, 'rate')),
+    line('http_req_duration p95', p(http, 'p(95)')),
+    line('http_req_duration p99', p(http, 'p(99)')),
+  ];
+  return out.join('\n');
+}
 import http from 'k6/http';
 import { sleep, check, group } from 'k6';
 import { Trend, Counter } from 'k6/metrics';
-import { textSummary } from 'https://jslib.k6.io/k6-summary/0.0.4/index.js';
 
 const BASE_URL = __ENV.BASE_URL || 'http://localhost:3000';
 const SUT = __ENV.SUT || 'monolith';
@@ -28,6 +45,15 @@ function recordFailure(endpoint, status, errorCode) {
   if (failLogCount < FAIL_LOG_LIMIT) {
     console.error(`[fail] endpoint=${endpoint} status=${status || 0} code=${errorCode || ''}`);
     failLogCount += 1;
+  }
+}
+
+// Safely parse JSON without throwing when body is empty or not JSON
+function safeJson(res, path) {
+  try {
+    return path ? res.json(path) : res.json();
+  } catch (e) {
+    return null;
   }
 }
 
@@ -123,10 +149,10 @@ function login(user) {
 
   check(res, {
     'signin status is 200': (r) => r.status === 200,
-    'signin success flag': (r) => r.json('success') === true,
+    'signin success flag': () => safeJson(res, 'success') === true,
   });
 
-  const token = res.json('data.accessToken');
+  const token = safeJson(res, 'data.accessToken');
   return { token, res };
 }
 
@@ -141,7 +167,7 @@ function getPermohonan(token) {
   check(res, {
     'list permohonan 200': (r) => r.status === 200,
   });
-  return res.json('data') || [];
+  return safeJson(res, 'data') || [];
 }
 
 function createPermohonan(token, userId) {
@@ -167,7 +193,7 @@ function createPermohonan(token, userId) {
     'create permohonan 201': (r) => r.status === 201,
   });
 
-  return res.json('data');
+  return safeJson(res, 'data');
 }
 
 function submitPermohonan(token, id) {
@@ -189,7 +215,7 @@ function submitPermohonan(token, id) {
     }
   }
   check(res, { 'submit permohonan ok': (r) => ok(r.status) });
-  return res?.json('data');
+  return safeJson(res, 'data');
 }
 
 function approvePermohonan(token, id) {
@@ -200,7 +226,7 @@ function approvePermohonan(token, id) {
   workflowLatency.add(res.timings.duration, { action: 'approve', sut: SUT });
   if (res.status >= 400 || res.status === 0 || res.error) recordFailure('permohonan-approve', res.status, res.error_code);
   check(res, { 'approve 200': (r) => r.status === 200 });
-  return res.json('data');
+  return safeJson(res, 'data');
 }
 
 function createDisposisi(token, permohonanId) {
@@ -250,7 +276,7 @@ function submitSurvey(token, permohonanId) {
     tags: { endpoint: 'skm-lookup', sut: SUT },
   });
 
-  let skmId = lookup.json('data.id');
+  let skmId = safeJson(lookup, 'data.id');
 
   if ((lookup.status === 404 || !skmId) && lookup.status !== 0 && !lookup.error) {
     // Try to get permohonan details to create SKM notification
@@ -259,8 +285,8 @@ function submitSurvey(token, permohonanId) {
       tags: { endpoint: 'permohonan-detail', sut: SUT },
     });
     if (perm.status === 200) {
-      const nomor_registrasi = perm.json('data.nomor_registrasi');
-      const user_id = perm.json('data.user_id');
+      const nomor_registrasi = safeJson(perm, 'data.nomor_registrasi');
+      const user_id = safeJson(perm, 'data.user_id');
       const notifyRes = http.post(`${BASE_URL}/api/skm/notify`, JSON.stringify({
         permohonan_id: permohonanId,
         user_id,
@@ -270,7 +296,7 @@ function submitSurvey(token, permohonanId) {
         tags: { endpoint: 'skm-notify', sut: SUT },
       });
       if (notifyRes.status === 201) {
-        skmId = notifyRes.json('data.id');
+        skmId = safeJson(notifyRes, 'data.id');
       } else {
         recordFailure('skm-notify', notifyRes.status, notifyRes.error_code);
         return notifyRes;
@@ -319,7 +345,7 @@ export default function () {
 
     if (actor.role === 'Pemohon') {
       group('pemohon-flow', () => {
-        const permohonan = createPermohonan(token, res.json('data.id'));
+        const permohonan = createPermohonan(token, safeJson(res, 'data.id'));
         think();
         if (permohonan && permohonan.id) {
           submitPermohonan(token, permohonan.id);
@@ -348,7 +374,7 @@ export default function () {
           recordFailure('disposisi-list', listResp.status, listResp.error_code);
           return;
         }
-        const disposisiList = listResp.json('data') || [];
+        const disposisiList = safeJson(listResp, 'data') || [];
         if (!disposisiList.length) {
           return; // no disposisi yet; skip without failing
         }
@@ -364,7 +390,7 @@ export default function () {
         });
         workflowLatency.add(resDrafts.timings.duration, { action: 'draft-list', sut: SUT });
         if (resDrafts.status >= 400 || resDrafts.status === 0 || resDrafts.error) recordFailure('draft-list', resDrafts.status, resDrafts.error_code);
-        const drafts = resDrafts.json('data') || [];
+        const drafts = safeJson(resDrafts, 'data') || [];
         if (drafts.length === 0) {
           return; // skip to avoid 404 noise when no drafts exist
         }
@@ -388,7 +414,7 @@ export function handleSummary(data) {
     .join('\n');
   return {
     [`${dir}/summary.json`]: JSON.stringify(data, null, 2),
-    [`${dir}/summary.txt`]: textSummary(data, { indent: ' ', enableColors: false }),
+    [`${dir}/summary.txt`]: localTextSummary(data),
     [`${dir}/failures.json`]: JSON.stringify(failureEntries, null, 2),
     [`${dir}/failures.txt`]: failureLines,
   };

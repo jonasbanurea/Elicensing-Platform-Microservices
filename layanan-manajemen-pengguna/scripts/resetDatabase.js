@@ -1,5 +1,6 @@
 // Reset auth/user database to a clean state for repeatable tests
 const sequelize = require('../utils/database');
+const User = require('../models/User'); // Import User model to ensure it's registered
 
 async function resetDatabase() {
   try {

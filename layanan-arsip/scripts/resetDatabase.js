@@ -1,5 +1,6 @@
 // Reset archive service database for consistent benchmarks
 const sequelize = require('../utils/database');
+const Arsip = require('../models/Arsip'); // Import Arsip model to ensure it's registered
 
 async function resetDatabase() {
   try {

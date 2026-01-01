@@ -1,0 +1,5 @@
+K6 Summary (offline text)
+requests            0.00
+http_req_failed rate0.00
+http_req_duration p95521.12
+http_req_duration p99727.02
