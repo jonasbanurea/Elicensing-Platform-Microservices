@@ -26,7 +26,7 @@ Located in [`reports/`](reports/)
 
 - **[Comprehensive Scalability Report](../reports/scalability-testing-report-comprehensive.md)** - Main test report (22+ hours)
 - **[Interoperability Test Results](reports/interoperability-test-results-2025-12-22.md)** - Latest interop results with sequence diagram
-- **[VU Selection Methodology](reports/Report-baseline-stress-user-count-jelita.md)** - Load test parameter calculation
+- **[VU Selection Methodology](../Report-baseline-stress-user-count-jelita.md)** - Load test parameter calculation
 - **[SPBE Compliance Checklist](reports/SPBE_COMPLIANCE_CHECKLIST.md)** - National standards compliance (59%)
 - **[OSS Integration Report](reports/OSS_INTEGRATION_REPORT.md)** - External platform integration
 - **[Testing Results Summary](reports/TESTING_RESULTS.md)** - Consolidated results
@@ -69,7 +69,7 @@ docs/
 
 #### Understand Test Results
 1. Read [Comprehensive Scalability Report](../reports/scalability-testing-report-comprehensive.md)
-2. See methodology: [VU Selection](reports/Report-baseline-stress-user-count-jelita.md)
+2. See methodology: [VU Selection](../Report-baseline-stress-user-count-jelita.md)
 3. Check compliance: [SPBE Checklist](reports/SPBE_COMPLIANCE_CHECKLIST.md)
 
 #### Deploy the System
@@ -105,7 +105,7 @@ docs/
 | Document | Size | Description |
 |----------|------|-------------|
 | [interoperability-test-results-2025-12-22.md](reports/interoperability-test-results-2025-12-22.md) | 70.12 KB | Interop test results |
-| [Report-baseline-stress-user-count-jelita.md](reports/Report-baseline-stress-user-count-jelita.md) | 9.24 KB | VU methodology |
+| [Report-baseline-stress-user-count-jelita.md](../Report-baseline-stress-user-count-jelita.md) | 9.24 KB | VU methodology |
 | [TESTING_RESULTS.md](reports/TESTING_RESULTS.md) | 27.08 KB | Results summary |
 | [OSS_INTEGRATION_REPORT.md](reports/OSS_INTEGRATION_REPORT.md) | 19.88 KB | Integration report |
 | [SPBE_COMPLIANCE_CHECKLIST.md](reports/SPBE_COMPLIANCE_CHECKLIST.md) | 26.67 KB | Compliance matrix |

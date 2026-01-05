@@ -8,7 +8,7 @@
 
 This report determines representative **virtual user (VU / thread)** counts for:
 
-- **Baseline load**: “normal/day-to-day” operating conditions (for performance regression and SLO verification).
+- **Baseline load**: "normal/day-to-day" operating conditions (for performance regression and SLO verification).
 - **Stress load**: high-load conditions (near peak) to observe *bottlenecks*, *autoscaling behavior*, and degradation thresholds.
 
 All calculations are based on the **real request data** you provided in this project conversation.
@@ -54,9 +54,9 @@ Per-minute data (date **19 Dec 2025**, Asia/Jakarta):
 
 ---
 
-## 3. Method: converting “requests/min” to “user count”
+## 3. Method: converting "requests/min" to "user count"
 
-To translate throughput (requests/min) into concurrent users, we apply **Little’s Law** under a *closed workload model*:
+To translate throughput (requests/min) into concurrent users, we apply **Little's Law** under a *closed workload model*:
 
 \[
 N \approx X \times (R + Z)
@@ -141,7 +141,7 @@ Required VUs (rows = think time \(Z\), columns = response time \(R\)):
 Quick interpretation:
 
 - Larger **think time (Z)** → more VUs are needed to reach the same throughput.
-- Larger **response time (R)** → more VUs are needed to maintain the same throughput (each request “occupies” a user longer).
+- Larger **response time (R)** → more VUs are needed to maintain the same throughput (each request "occupies" a user longer).
 
 ---
 
@@ -198,7 +198,7 @@ VU = (req_per_min / 60) × (avg_response_time_sec + think_time_sec)
 
 ## 8. Final decision included in the repository
 
-Based on the provided non-static request snapshot and Little’s Law (assuming \(R=0.5s\), \(Z=5.0s\)):
+Based on the provided non-static request snapshot and Little's Law (assuming \(R=0.5s\), \(Z=5.0s\)):
 
 - **Baseline test**: **35 VU**
 - **Stress test**: **75 VU** (represents historical p95 peak: 791 req/min)
@@ -271,7 +271,7 @@ If the real response time differs from the assumption:
 
 - Extract `avg` or `p50/p90 response time` from APM or test results.
 - Replace \(R\) in the formula.
-- Keep \(Z\) aligned with the intended user model (smaller for “power users”, larger for typical users).
+- Keep \(Z\) aligned with the intended user model (smaller for "power users", larger for typical users).
 
 Example intuition:
 - If \(R\) roughly doubles, the VU count needed for the same throughput tends to increase close to 2× as well (depending on \(Z\)).

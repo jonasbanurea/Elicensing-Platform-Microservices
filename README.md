@@ -40,7 +40,7 @@ Testing wasn't an afterthought—it drove architectural decisions. Each architec
 - [10× Repetition Scalability Analysis](scalability-testing-report-comprehensive.md)  
 - [Soak Test Results (11-hour stability)](test-report-soak-2025-12-21.md)  
 - [Interoperability Compliance](interoperability-test-results-2025-12-22.md)  
-- [Testing Methodology](docs/reports/Report-baseline-stress-user-count-jelita.md)
+- [Testing Methodology](Report-baseline-stress-user-count-jelita.md)
 
 ---
 
@@ -458,7 +458,7 @@ Where:
 
 **Validation**: Sensitivity analysis across different R and Z values confirmed these numbers represent realistic production scenarios, not synthetic benchmarks.
 
-See complete methodology: [Report-baseline-stress-user-count-jelita.md](docs/reports/Report-baseline-stress-user-count-jelita.md)
+See complete methodology: [Report-baseline-stress-user-count-jelita.md](Report-baseline-stress-user-count-jelita.md)
 
 ---
 
@@ -640,7 +640,7 @@ prototype_eng V2/
 ## 📚 Documentation
 
 ### Core Documentation
-- **[Report-baseline-stress-user-count-jelita.md](docs/reports/Report-baseline-stress-user-count-jelita.md)** - VU selection methodology using Little's Law & production data
+- **[Report-baseline-stress-user-count-jelita.md](Report-baseline-stress-user-count-jelita.md)** - VU selection methodology using Little's Law & production data
 - **[scalability-testing-report-comprehensive.md](scalability-testing-report-comprehensive.md)** - Complete 3-phase scalability testing (22 hours)
 - **[interoperability-test-results-2025-12-22.md](interoperability-test-results-2025-12-22.md)** - Contract, data exchange & SPBE compliance (100% contract conformance)
 - **[SPBE_COMPLIANCE_CHECKLIST.md](docs/reports/SPBE_COMPLIANCE_CHECKLIST.md)** - Indonesian national standards compliance (58 requirements verified)
@@ -755,7 +755,7 @@ This project's approach: Calculate from production data using queuing theory
 - ✅ Reproducible methodology applicable to other systems
 - ✅ Addresses reviewer question: "How did you choose these load levels?"
 
-See complete justification: [Report-baseline-stress-user-count-jelita.md](docs/reports/Report-baseline-stress-user-count-jelita.md)
+See complete justification: [Report-baseline-stress-user-count-jelita.md](Report-baseline-stress-user-count-jelita.md)
 
 ---
 
