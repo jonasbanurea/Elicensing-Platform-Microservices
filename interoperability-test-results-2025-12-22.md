@@ -55,7 +55,6 @@ The API contracts tested in this phase are derived from three sources:
 
 The following sequence diagram illustrates the two-phase interoperability pattern used throughout the testing:
 
-```mermaid
 sequenceDiagram
     participant Client
     participant Gateway as API Gateway (TS3)
@@ -65,7 +64,7 @@ sequenceDiagram
     
     Note over Client,Internal: Phase 1: Outbound Submission (Synchronous)
     
-    Note right of Client: Idempotency Key generated
+    Note right of Client: Client supplies Idempotency-Key
     Client->>Gateway: POST /submit-application<br/>[Authorization, Idempotency-Key]
     Note right of Gateway: Correlation-ID propagation
     Gateway->>Adapter: Forward with Correlation-ID
@@ -74,18 +73,21 @@ sequenceDiagram
     Adapter->>OSS: Submit to external platform<br/>[Correlation-ID, callback URL]
     OSS-->>Adapter: 202 Accepted (submission_id)
     Adapter-->>Gateway: 202 Accepted
-    Gateway-->>Client: 202 Accepted (tracking ID)
+    Gateway-->>Client: 202 Accepted (tracking_id = application_id)
     
     Note over Client,Internal: Phase 2: Inbound Callback (Asynchronous)
     
     OSS->>Gateway: POST /callback/approval<br/>[X-Webhook-Signature, Correlation-ID]
-    Note right of Gateway: ... asynchronous callback with idempotency and correlation-ID traceability
+    Note right of Gateway: Callback verification and forwarding<br/>(Correlation-ID matching; optional signature check)
     Gateway->>Adapter: Verify and forward
     Adapter->>Internal: Update application status<br/>[Correlation-ID match]
     Internal-->>Adapter: Status updated
     Adapter-->>Gateway: 200 OK
     Gateway-->>OSS: 200 OK (callback acknowledged)
-```
+
+    Note right of Client: Status Polling
+    Client->>Gateway: GET /application/{tracking_id}
+    Gateway-->>Client: 200 OK (current status: APPROVED)
 
 **Key Control Mechanisms (Critical for Interoperability):**
 
