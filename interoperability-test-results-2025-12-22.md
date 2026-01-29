@@ -724,7 +724,7 @@ Error responses maintain consistency across all microservices:
 ### 7.3 For Production Deployment
 
 **Pre-Production Checklist:**
-- [ ] Obtain OSS Sandbox credentials for real platform testing
+- [ ] Obtain OSS Emulator credentials for real platform testing
 - [ ] Complete security audit (external penetration test)
 - [ ] Document disaster recovery procedures
 - [ ] Establish 24/7 on-call rotation
