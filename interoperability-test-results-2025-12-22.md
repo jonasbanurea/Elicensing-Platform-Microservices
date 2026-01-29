@@ -60,7 +60,7 @@ sequenceDiagram
     participant Client
     participant Gateway as API Gateway (TS3)
     participant Adapter as OSS Adapter
-    participant OSS as Mock/Sandbox OSS
+    participant OSS as OSS-RBA Emulator/Mock (institution-gated endpoints)
     participant Internal as Internal Services (Workflow + Archive)
     
     Note over Client,Internal: Phase 1: Outbound Submission (Synchronous)
@@ -79,7 +79,7 @@ sequenceDiagram
     Note over Client,Internal: Phase 2: Inbound Callback (Asynchronous)
     
     OSS->>Gateway: POST /callback/approval<br/>[X-Webhook-Signature, Correlation-ID]
-    Note right of Gateway: Webhook Signature Verification
+    Note right of Gateway: ... asynchronous callback with idempotency and correlation-ID traceability
     Gateway->>Adapter: Verify and forward
     Adapter->>Internal: Update application status<br/>[Correlation-ID match]
     Internal-->>Adapter: Status updated
@@ -93,7 +93,7 @@ sequenceDiagram
 
 2. **Correlation-ID Propagation:** Unique identifier injected at API Gateway and propagated across all service boundaries. Enables distributed tracing and ensures callback responses can be matched to original submission requests even under out-of-order delivery scenarios.
 
-3. **Webhook Signature Verification:** HMAC-based signature validation for all inbound callbacks from external platforms. Prevents spoofing attacks and ensures authenticity of approval/rejection notifications from Mock/Sandbox OSS.
+3. **Webhook ... asynchronous callback with idempotency and correlation-ID traceability:** HMAC-based signature validation for all inbound callbacks from external platforms. Prevents spoofing attacks and ensures authenticity of approval/rejection notifications from OSS-RBA Emulator/Mock (institution-gated endpoints).
 
 ### 1.2 Test Execution
 
@@ -211,7 +211,7 @@ sequenceDiagram
     participant OSS_Adapter as OSS Adapter<br/>(Internal)
     participant Workflow as Workflow Service
     participant Archive as Archive Service
-    participant OSS_Emulator as Mock OSS-RBA<br/>(Sandbox Emulator)
+    participant OSS_Emulator as OSS-RBA Emulator/Mock<br/>(institution-gated endpoints)
     
     Note over Client,OSS_Emulator: Phase 1: Outbound Submission (Sync)
     
@@ -244,10 +244,10 @@ sequenceDiagram
     
     Note over Client,OSS_Emulator: Phase 2: Inbound Callback (Async)
     
-    OSS_Emulator->>Gateway: POST /api/webhooks/oss/status-update<br/>[signature verification]
+    OSS_Emulator->>Gateway: POST /api/webhooks/oss/status-update<br/>[... asynchronous callback with idempotency and correlation-ID traceability]
     Note left of OSS_Emulator: callback_id: cb-xxx<br/>application_id: OSS-20250001<br/>status: APPROVED/REJECTED
     
-    Gateway->>Gateway: Verify webhook signature
+    Gateway->>Gateway: ... asynchronous callback with idempotency and correlation-ID traceability
     Note right of Gateway: HMAC-SHA256<br/>X-OSS-Signature header
     
     Gateway->>Workflow: Update application status<br/>[correlation-id preserved]
@@ -270,7 +270,7 @@ sequenceDiagram
 **Diagram Key:**
 
 **Trust Boundaries:**
-- **TS3 (API Gateway):** Primary security perimeter; validates all inbound requests (JWT authentication) and outbound webhooks (signature verification)
+- **TS3 (API Gateway):** Primary security perimeter; validates all inbound requests (JWT authentication) and outbound webhooks (... asynchronous callback with idempotency and correlation-ID traceability)
 
 **Critical Interoperability Patterns:**
 
@@ -299,7 +299,7 @@ sequenceDiagram
    - Invalid signatures rejected with HTTP 401
 
 **Mock vs. Production OSS:**
-- Diagram shows **Mock OSS-RBA (Sandbox Emulator)** for controlled testing
+- Diagram shows **OSS-RBA Emulator/Mock (institution-gated endpoints)** for controlled testing
 - Production deployment requires real OSS Sandbox credentials from BKPM
 - Emulator faithfully reproduces OSS callback patterns and error scenarios
 - Response delays and failure injection configurable for resilience testing
