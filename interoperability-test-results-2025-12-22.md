@@ -60,7 +60,7 @@ sequenceDiagram
     participant Client
     participant Gateway as API Gateway (TS3)
     participant Adapter as OSS Adapter
-    participant OSS as Mock/Sandbox OSS
+    participant OSS RBA Emulator / Mock
     participant Internal as Internal Services (Workflow + Archive)
     
     Note over Client,Internal: Phase 1: Outbound Submission (Synchronous)
@@ -93,7 +93,7 @@ sequenceDiagram
 
 2. **Correlation-ID Propagation:** Unique identifier injected at API Gateway and propagated across all service boundaries. Enables distributed tracing and ensures callback responses can be matched to original submission requests even under out-of-order delivery scenarios.
 
-3. **Webhook Signature Verification:** HMAC-based signature validation for all inbound callbacks from external platforms. Prevents spoofing attacks and ensures authenticity of approval/rejection notifications from Mock/Sandbox OSS.
+3. **Webhook Signature Verification:** HMAC-based signature validation for all inbound callbacks from external platforms. Prevents spoofing attacks and ensures authenticity of approval/rejection notifications from Mock OSS.
 
 ### 1.2 Test Execution
 
@@ -211,7 +211,7 @@ sequenceDiagram
     participant OSS_Adapter as OSS Adapter<br/>(Internal)
     participant Workflow as Workflow Service
     participant Archive as Archive Service
-    participant OSS_Emulator as Mock OSS-RBA<br/>(Sandbox Emulator)
+    participant OSS_Emulator as Mock OSS-RBA<br/>(Emulator)
     
     Note over Client,OSS_Emulator: Phase 1: Outbound Submission (Sync)
     
@@ -299,7 +299,7 @@ sequenceDiagram
    - Invalid signatures rejected with HTTP 401
 
 **Mock vs. Production OSS:**
-- Diagram shows **Mock OSS-RBA (Sandbox Emulator)** for controlled testing
+- Diagram shows **Mock OSS-RBA (Emulator)** for controlled testing
 - Production deployment requires real OSS Sandbox credentials from BKPM
 - Emulator faithfully reproduces OSS callback patterns and error scenarios
 - Response delays and failure injection configurable for resilience testing
@@ -724,7 +724,7 @@ Error responses maintain consistency across all microservices:
 ### 7.3 For Production Deployment
 
 **Pre-Production Checklist:**
-- [ ] Obtain OSS Sandbox credentials for real platform testing
+- [ ] Obtain OSS Emulator credentials for real platform testing
 - [ ] Complete security audit (external penetration test)
 - [ ] Document disaster recovery procedures
 - [ ] Establish 24/7 on-call rotation
