@@ -60,8 +60,7 @@ sequenceDiagram
     participant Client
     participant Gateway as API Gateway (TS3)
     participant Adapter as OSS Adapter
-    participant OSS as OSS-RBA Emulator/
-Mock (institution-gated endpoints)
+    participant OSS as OSS-RBA Emulator/Mock (institution-gated endpoints)
     participant Internal as Internal Services (Workflow + Archive)
     
     Note over Client,Internal: Phase 1: Outbound Submission (Synchronous)
