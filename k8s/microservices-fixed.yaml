@@ -1,0 +1,235 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: registration
+  namespace: jelita-system
+spec:
+  type: ClusterIP
+  ports:
+  - port: 3010
+    targetPort: 3010
+  selector:
+    app: registration
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: registration
+  namespace: jelita-system
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: registration
+  template:
+    metadata:
+      labels:
+        app: registration
+    spec:
+      containers:
+      - name: registration
+        image: jelita-registration:latest
+        imagePullPolicy: Never
+        ports:
+        - containerPort: 3010
+        env:
+        - name: PORT
+          value: '3010'
+        - name: DB_HOST
+          value: mysql
+        - name: DB_NAME
+          value: jelita_db
+        - name: DB_USER
+          value: root
+        - name: DB_PASSWORD
+          value: JelitaMySQL2024
+        resources:
+          requests:
+            cpu: 250m
+            memory: 256Mi
+          limits:
+            cpu: 600m
+            memory: 512Mi
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 3010
+          initialDelaySeconds: 30
+          periodSeconds: 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: workflow
+  namespace: jelita-system
+spec:
+  type: ClusterIP
+  ports:
+  - port: 3020
+    targetPort: 3020
+  selector:
+    app: workflow
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: workflow
+  namespace: jelita-system
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: workflow
+  template:
+    metadata:
+      labels:
+        app: workflow
+    spec:
+      containers:
+      - name: workflow
+        image: jelita-workflow:latest
+        imagePullPolicy: Never
+        ports:
+        - containerPort: 3020
+        env:
+        - name: PORT
+          value: '3020'
+        - name: DB_HOST
+          value: mysql
+        - name: DB_NAME
+          value: jelita_db
+        - name: DB_USER
+          value: root
+        - name: DB_PASSWORD
+          value: JelitaMySQL2024
+        resources:
+          requests:
+            cpu: 250m
+            memory: 256Mi
+          limits:
+            cpu: 600m
+            memory: 512Mi
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 3020
+          initialDelaySeconds: 30
+          periodSeconds: 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: survey
+  namespace: jelita-system
+spec:
+  type: ClusterIP
+  ports:
+  - port: 3030
+    targetPort: 3030
+  selector:
+    app: survey
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: survey
+  namespace: jelita-system
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: survey
+  template:
+    metadata:
+      labels:
+        app: survey
+    spec:
+      containers:
+      - name: survey
+        image: jelita-survey:latest
+        imagePullPolicy: Never
+        ports:
+        - containerPort: 3030
+        env:
+        - name: PORT
+          value: '3030'
+        - name: DB_HOST
+          value: mysql
+        - name: DB_NAME
+          value: jelita_db
+        - name: DB_USER
+          value: root
+        - name: DB_PASSWORD
+          value: JelitaMySQL2024
+        resources:
+          requests:
+            cpu: 250m
+            memory: 256Mi
+          limits:
+            cpu: 600m
+            memory: 512Mi
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 3030
+          initialDelaySeconds: 30
+          periodSeconds: 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: archive
+  namespace: jelita-system
+spec:
+  type: ClusterIP
+  ports:
+  - port: 3040
+    targetPort: 3040
+  selector:
+    app: archive
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: archive
+  namespace: jelita-system
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: archive
+  template:
+    metadata:
+      labels:
+        app: archive
+    spec:
+      containers:
+      - name: archive
+        image: jelita-archive:latest
+        imagePullPolicy: Never
+        ports:
+        - containerPort: 3040
+        env:
+        - name: PORT
+          value: '3040'
+        - name: DB_HOST
+          value: mysql
+        - name: DB_NAME
+          value: jelita_db
+        - name: DB_USER
+          value: root
+        - name: DB_PASSWORD
+          value: JelitaMySQL2024
+        resources:
+          requests:
+            cpu: 250m
+            memory: 256Mi
+          limits:
+            cpu: 600m
+            memory: 512Mi
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 3040
+          initialDelaySeconds: 30
+          periodSeconds: 10

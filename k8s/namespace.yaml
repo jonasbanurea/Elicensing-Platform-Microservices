@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: jelita-system
+  labels:
+    name: jelita-system
+    environment: research
+    purpose: scalability-interoperability-testing

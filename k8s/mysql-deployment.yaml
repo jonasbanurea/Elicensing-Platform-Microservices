@@ -1,0 +1,131 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mysql-init-script
+  namespace: jelita-system
+data:
+  01-create-databases.sql: |
+    CREATE DATABASE IF NOT EXISTS jelita_user_management;
+    CREATE DATABASE IF NOT EXISTS jelita_registration;
+    CREATE DATABASE IF NOT EXISTS jelita_workflow;
+    CREATE DATABASE IF NOT EXISTS jelita_survey;
+    CREATE DATABASE IF NOT EXISTS jelita_archive;
+    GRANT ALL PRIVILEGES ON jelita_user_management.* TO 'root'@'%';
+    GRANT ALL PRIVILEGES ON jelita_registration.* TO 'root'@'%';
+    GRANT ALL PRIVILEGES ON jelita_workflow.* TO 'root'@'%';
+    GRANT ALL PRIVILEGES ON jelita_survey.* TO 'root'@'%';
+    GRANT ALL PRIVILEGES ON jelita_archive.* TO 'root'@'%';
+    FLUSH PRIVILEGES;
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mysql-pvc
+  namespace: jelita-system
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+  storageClassName: microk8s-hostpath
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mysql
+  namespace: jelita-system
+  labels:
+    app: mysql
+spec:
+  type: ClusterIP
+  # Remove clusterIP: None to get a normal ClusterIP with IP assignment
+  ports:
+    - port: 3306
+      targetPort: 3306
+      protocol: TCP
+      name: mysql
+  selector:
+    app: mysql
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: mysql
+  namespace: jelita-system
+  labels:
+    app: mysql
+spec:
+  serviceName: mysql
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mysql
+  template:
+    metadata:
+      labels:
+        app: mysql
+    spec:
+      containers:
+      - name: mysql
+        image: mysql:8.0
+        ports:
+        - containerPort: 3306
+          name: mysql
+        env:
+        - name: MYSQL_ROOT_PASSWORD
+          value: "JelitaMySQL2024"
+        - name: MYSQL_CHARACTER_SET_SERVER
+          value: "utf8mb4"
+        - name: MYSQL_COLLATION_SERVER
+          value: "utf8mb4_unicode_ci"
+        args:
+          - "--max_connections=500"
+          - "--innodb_buffer_pool_size=512M"
+        resources:
+          requests:
+            memory: "1Gi"
+            cpu: "500m"
+          limits:
+            memory: "2Gi"
+            cpu: "1000m"
+        volumeMounts:
+        - name: mysql-data
+          mountPath: /var/lib/mysql
+        - name: mysql-init
+          mountPath: /docker-entrypoint-initdb.d
+        livenessProbe:
+          exec:
+            command:
+            - mysqladmin
+            - ping
+            - -h
+            - localhost
+            - -pJelitaMySQL2024
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+        readinessProbe:
+          exec:
+            command:
+            - mysqladmin
+            - ping
+            - -h
+            - localhost
+            - -pJelitaMySQL2024
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 3
+      volumes:
+      - name: mysql-init
+        configMap:
+          name: mysql-init-script
+  volumeClaimTemplates:
+  - metadata:
+      name: mysql-data
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      storageClassName: local-path
+      resources:
+        requests:
+          storage: 10Gi

@@ -1,0 +1,126 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: survey
+  namespace: jelita-system
+  labels:
+    app: survey
+    tier: backend
+spec:
+  type: ClusterIP
+  ports:
+    - port: 3004
+      targetPort: 3004
+      protocol: TCP
+      name: http
+  selector:
+    app: survey
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: survey
+  namespace: jelita-system
+  labels:
+    app: survey
+    tier: backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: survey
+  template:
+    metadata:
+      labels:
+        app: survey
+        tier: backend
+    spec:
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: app
+                  operator: In
+                  values:
+                  - survey
+              topologyKey: kubernetes.io/hostname
+      containers:
+      - name: survey
+        image: jelita-survey:latest
+        imagePullPolicy: Never
+        ports:
+        - containerPort: 3004
+          name: http
+        env:
+        - name: NODE_ENV
+          value: "production"
+        - name: PORT
+          value: "3004"
+        - name: DB_HOST
+          value: "mysql"
+        - name: DB_PORT
+          value: "3306"
+        - name: DB_USER
+          value: "root"
+        - name: DB_PASSWORD
+          value: "JelitaMySQL2024"
+        - name: DB_NAME
+          value: "jelita_survey"
+        - name: USER_SERVICE_URL
+          value: "http://user-management:3001"
+        - name: PERMOHONAN_SERVICE_URL
+          value: "http://registration:3002"
+        - name: JWT_SECRET
+          value: "jelita-jwt-secret-key-2024"
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "300m"
+        livenessProbe:
+          httpGet:
+            path: /api/survey/health
+            port: 3004
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /api/survey/health
+            port: 3004
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: survey-hpa
+  namespace: jelita-system
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: survey
+  minReplicas: 1
+  maxReplicas: 4
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 80

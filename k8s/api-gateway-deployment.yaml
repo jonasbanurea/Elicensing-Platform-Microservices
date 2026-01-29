@@ -1,0 +1,274 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nginx-config
+  namespace: jelita-system
+data:
+  nginx.conf: |
+    events {
+        worker_connections 4096;
+    }
+
+    http {
+        upstream user_management {
+            least_conn;
+            server user-management:3001 max_fails=3 fail_timeout=30s;
+            keepalive 32;
+        }
+
+        upstream registration {
+            least_conn;
+            server registration:3002 max_fails=3 fail_timeout=30s;
+            keepalive 32;
+        }
+
+        upstream workflow {
+            least_conn;
+            server workflow:3003 max_fails=3 fail_timeout=30s;
+            keepalive 32;
+        }
+
+        upstream survey {
+            least_conn;
+            server survey:3004 max_fails=3 fail_timeout=30s;
+            keepalive 32;
+        }
+
+        upstream archive {
+            least_conn;
+            server archive:3005 max_fails=3 fail_timeout=30s;
+            keepalive 32;
+        }
+
+
+        # Rate Limiting Zone (Security Suite: 2 req/s)
+        limit_req_zone $binary_remote_addr zone=security_limit:10m rate=2r/s;
+        limit_req_status 429;
+
+        # Logging
+        log_format detailed '$remote_addr - $remote_user [$time_local] "$request" '
+                           '$status $body_bytes_sent "$http_referer" '
+                           '"$http_user_agent" rt=$request_time uct="$upstream_connect_time" '
+                           'uht="$upstream_header_time" urt="$upstream_response_time"';
+
+        access_log /var/log/nginx/access.log detailed;
+        error_log /var/log/nginx/error.log warn;
+
+        # Timeouts and buffers
+        client_body_timeout 60s;
+        client_header_timeout 60s;
+        keepalive_timeout 65s;
+        send_timeout 60s;
+        proxy_connect_timeout 60s;
+        proxy_send_timeout 60s;
+        proxy_read_timeout 60s;
+
+        # Security headers
+        add_header X-Frame-Options "SAMEORIGIN" always;
+        add_header X-Content-Type-Options "nosniff" always;
+        add_header X-XSS-Protection "1; mode=block" always;
+
+        server {
+            listen 3000;
+            server_name _;
+
+            # Health check endpoint
+            location /health {
+                access_log off;
+                return 200 "healthy\n";
+                add_header Content-Type text/plain;
+            }
+
+            # User Management Service
+            location /api/users/ {
+                limit_req zone=security_limit burst=3 nodelay;
+                proxy_pass http://user_management/api/users/;
+                proxy_http_version 1.1;
+                proxy_set_header Upgrade $http_upgrade;
+                proxy_set_header Connection 'upgrade';
+                proxy_set_header Host $host;
+                proxy_set_header X-Real-IP $remote_addr;
+                proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                proxy_set_header X-Forwarded-Proto $scheme;
+                proxy_cache_bypass $http_upgrade;
+                proxy_next_upstream error timeout invalid_header http_500 http_502 http_503 http_504;
+            }
+
+            # Registration Service
+            location /api/permohonan/ {
+                proxy_pass http://registration/api/permohonan/;
+                proxy_http_version 1.1;
+                proxy_set_header Upgrade $http_upgrade;
+                proxy_set_header Connection 'upgrade';
+                proxy_set_header Host $host;
+                proxy_set_header X-Real-IP $remote_addr;
+                proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                proxy_set_header X-Forwarded-Proto $scheme;
+                proxy_cache_bypass $http_upgrade;
+                proxy_next_upstream error timeout invalid_header http_500 http_502 http_503 http_504;
+            }
+
+            # Workflow Service
+            location /api/workflow/ {
+                proxy_pass http://workflow/api/workflow/;
+                proxy_http_version 1.1;
+                proxy_set_header Upgrade $http_upgrade;
+                proxy_set_header Connection 'upgrade';
+                proxy_set_header Host $host;
+                proxy_set_header X-Real-IP $remote_addr;
+                proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                proxy_set_header X-Forwarded-Proto $scheme;
+                proxy_cache_bypass $http_upgrade;
+                proxy_next_upstream error timeout invalid_header http_500 http_502 http_503 http_504;
+            }
+
+            # Survey Service
+            location /api/survey/ {
+                proxy_pass http://survey/api/survey/;
+                proxy_http_version 1.1;
+                proxy_set_header Upgrade $http_upgrade;
+                proxy_set_header Connection 'upgrade';
+                proxy_set_header Host $host;
+                proxy_set_header X-Real-IP $remote_addr;
+                proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                proxy_set_header X-Forwarded-Proto $scheme;
+                proxy_cache_bypass $http_upgrade;
+                proxy_next_upstream error timeout invalid_header http_500 http_502 http_503 http_504;
+            }
+
+            # Archive Service
+            location /api/archive/ {
+                proxy_pass http://archive/api/archive/;
+                proxy_http_version 1.1;
+                proxy_set_header Upgrade $http_upgrade;
+                proxy_set_header Connection 'upgrade';
+                proxy_set_header Host $host;
+                proxy_set_header X-Real-IP $remote_addr;
+                proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                proxy_set_header X-Forwarded-Proto $scheme;
+                proxy_cache_bypass $http_upgrade;
+                proxy_next_upstream error timeout invalid_header http_500 http_502 http_503 http_504;
+            }
+
+            # Health check proxies for backend services
+            location /api/archive/health {
+                proxy_pass http://archive/health;
+                access_log off;
+            }
+
+            location /api/permohonan/health {
+                proxy_pass http://registration/health;
+                access_log off;
+            }
+
+            location /api/survey/health {
+                proxy_pass http://survey/health;
+                access_log off;
+            }
+
+            location /api/workflow/health {
+                proxy_pass http://workflow/health;
+                access_log off;
+            }
+
+            location /api/users/health {
+                limit_req zone=security_limit burst=3 nodelay;
+                proxy_pass http://user_management/health;
+                access_log off;
+            }
+        }
+    }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: api-gateway
+  namespace: jelita-system
+  labels:
+    app: api-gateway
+    tier: frontend
+spec:
+  type: NodePort
+  ports:
+    - port: 3000
+      targetPort: 3000
+      nodePort: 30000
+      protocol: TCP
+      name: http
+  selector:
+    app: api-gateway
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api-gateway
+  namespace: jelita-system
+  labels:
+    app: api-gateway
+    tier: frontend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: api-gateway
+  template:
+    metadata:
+      labels:
+        app: api-gateway
+        tier: frontend
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:1.25-alpine
+        ports:
+        - containerPort: 3000
+          name: http
+        volumeMounts:
+        - name: nginx-config
+          mountPath: /etc/nginx/nginx.conf
+          subPath: nginx.conf
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "300m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 3000
+          initialDelaySeconds: 10
+          periodSeconds: 10
+          timeoutSeconds: 3
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 3000
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          timeoutSeconds: 3
+      volumes:
+      - name: nginx-config
+        configMap:
+          name: nginx-config
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: api-gateway-hpa
+  namespace: jelita-system
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: api-gateway
+  minReplicas: 1
+  maxReplicas: 4
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70

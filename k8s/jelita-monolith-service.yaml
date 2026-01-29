@@ -1,0 +1,18 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: jelita-monolith
+  namespace: jelita-system
+  labels:
+    app: jelita-monolith
+spec:
+  type: NodePort
+  ports:
+    - port: 3000
+      targetPort: 3000
+      nodePort: 30000
+      protocol: TCP
+      name: http
+  selector:
+    app: jelita-monolith

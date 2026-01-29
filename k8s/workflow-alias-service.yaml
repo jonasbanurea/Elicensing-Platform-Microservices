@@ -1,0 +1,25 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: workflow
+  namespace: jelita-system
+spec:
+  ports:
+  - port: 3000
+    targetPort: 3003
+    name: http
+  selector:
+    app: workflow-archive-merged
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: archive
+  namespace: jelita-system
+spec:
+  ports:
+  - port: 3001
+    targetPort: 3003
+    name: http
+  selector:
+    app: workflow-archive-merged
