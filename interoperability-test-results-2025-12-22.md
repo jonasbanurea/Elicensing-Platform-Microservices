@@ -55,6 +55,7 @@ The API contracts tested in this phase are derived from three sources:
 
 The following sequence diagram illustrates the two-phase interoperability pattern used throughout the testing:
 
+```mermaid
 sequenceDiagram
     participant Client
     participant Gateway as API Gateway (TS3)
@@ -88,6 +89,7 @@ sequenceDiagram
     Note right of Client: Status Polling
     Client->>Gateway: GET /application/{tracking_id}
     Gateway-->>Client: 200 OK (current status: APPROVED)
+```
 
 **Key Control Mechanisms (Critical for Interoperability):**
 
