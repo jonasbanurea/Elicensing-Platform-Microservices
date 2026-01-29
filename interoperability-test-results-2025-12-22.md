@@ -79,7 +79,7 @@ sequenceDiagram
     Note over Client,Internal: Phase 2: Inbound Callback (Asynchronous)
     
     OSS->>Gateway: POST /callback/approval<br/>[X-Webhook-Signature, Correlation-ID]
-    Note right of Gateway: Callback verification and forwarding<br/>(Correlation-ID matching; optional signature check)
+    Note right of Gateway: Callback verification and forwarding (Correlation-ID matching)
     Gateway->>Adapter: Verify and forward
     Adapter->>Internal: Update application status<br/>[Correlation-ID match]
     Internal-->>Adapter: Status updated
