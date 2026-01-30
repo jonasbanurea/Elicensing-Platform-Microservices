@@ -120,7 +120,8 @@ Each environment served a specific purpose, and combined they provide comprehens
 - [60-Run Load Testing](reports/COMPREHENSIVE-TESTING-REPORT-FOR-REVIEWER.md) (506K requests)  
 - [Security Compliance Journey](reports/comprehensive-security-testing-report.md) (100% audit)  
 - [SPBE Maturity Evidence](reports/SPBE-MATURITY-EVIDENCE.md) (72% compliance)  
-- [Rate Limiting Verification](reports/RATE_LIMITING_VERIFICATION_REPORT.md) (2-min focused test)
+- [Rate Limiting Verification](reports/RATE_LIMITING_VERIFICATION_REPORT.md) (2-min focused test)  
+- [Encryption-at-Rest Verification](ENCRYPTION-AT-REST-EVIDENCE.md) (Backups + K3s Secrets)
 
 ---
 

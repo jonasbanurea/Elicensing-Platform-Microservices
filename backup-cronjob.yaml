@@ -1,0 +1,42 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: encrypted-db-backup
+  namespace: jelita-system
+spec:
+  schedule: "0 2 * * *" # Run at 2 AM daily
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          nodeName: k3s-master
+          containers:
+          - name: backup
+            # Using mysql:8.0 image which has both mysqldump and openssl
+            image: mysql:8.0
+            command:
+            - /bin/bash
+            - -c
+            - |
+              echo "Starting Encrypted Backup..." && \
+              TIMESTAMP=$(date +%Y%m%d%H%M%S) && \
+              FILENAME="/backups/jelita_db_$TIMESTAMP.sql.enc" && \
+              mysqldump -h 10.43.27.22 --protocol=tcp -u root -pJelitaMySQL2024 --all-databases | \
+              openssl enc -aes-256-cbc -salt -pbkdf2 -pass pass:$GPG_PASSPHRASE -out "$FILENAME" && \
+              echo "Backup success: $FILENAME" && \
+              ls -lh $FILENAME
+            env:
+            - name: GPG_PASSPHRASE
+              valueFrom:
+                secretKeyRef:
+                  name: backup-encryption-secret
+                  key: GPG_PASSPHRASE
+            volumeMounts:
+            - name: backup-storage
+              mountPath: /backups
+          restartPolicy: OnFailure
+          volumes:
+          - name: backup-storage
+            hostPath:
+              path: /var/lib/rancher/k3s/storage/backups
+              type: DirectoryOrCreate
